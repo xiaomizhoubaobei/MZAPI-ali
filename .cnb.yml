@@ -66,3 +66,4 @@ $:
             - echo "调试专家智能体安装完成"
             - iflow agent add "performance-engineer" --scope global
             - echo "性能专家智能体安装完成"
+            
