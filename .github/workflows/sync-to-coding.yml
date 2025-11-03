@@ -1,0 +1,87 @@
+name: 同步代码到CNB
+on:
+  pull_request:
+    branches:
+      - main
+    types: [closed]
+    paths:
+      - 'src/**'
+
+permissions:
+  contents: read
+
+jobs:
+  sync-code:
+    permissions:
+      contents: write # for Git to git push
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && github.event.sender.type != 'Bot'
+    env:
+      CNB_USER: ${{ secrets.CNB_USER }}
+      CNB_EMAIL: ${{ secrets.CNB_EMAIL }}
+      CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: Audit - Workflow started
+        run: |
+          echo "Sync to CNB workflow started for PR #${{ github.event.pull_request.number }}" >> audit.log
+          echo "Triggered by: ${{ github.event.pull_request.user.login }}" >> audit.log
+          echo "Commit SHA: ${{ github.sha }}" >> audit.log
+          echo "Timestamp: $(date -u)" >> audit.log
+
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Audit - Code checked out
+        run: |
+          echo "Code checked out with full history" >> audit.log
+          echo "Repository: ${{ github.repository }}" >> audit.log
+          echo "Timestamp: $(date -u)" >> audit.log
+
+      - name: Configure Git User for CNB
+        run: |
+          git config --global user.name "${{ secrets.CNB_USER }}"
+          git config --global user.email "${{ secrets.CNB_EMAIL }}"
+
+      - name: Audit - Git user configured for CNB
+        run: |
+          echo "Git user configured for CNB" >> audit.log
+          echo "User: ${{ secrets.CNB_USER }}" >> audit.log
+          echo "Email: ${{ secrets.CNB_EMAIL }}" >> audit.log
+          echo "Timestamp: $(date -u)" >> audit.log
+
+      - name: Add CNB Remote
+        run: git remote add cnb https://${{ secrets.CNB_TOKEN }}@cnb.cool/XMZZUZHI/MZAPI/ali
+
+      - name: Audit - CNB remote added
+        run: |
+          echo "CNB remote added" >> audit.log
+          echo "Remote URL: https://***@cnb.cool/XMZZUZHI/MZAPI/ali" >> audit.log
+          echo "Timestamp: $(date -u)" >> audit.log
+
+      - name: Push to CNB
+        run: |
+          if ! git push cnb main; then
+            echo "Warning: Failed to push to CNB" >> audit.log
+            echo "Branch: main" >> audit.log
+            echo "Timestamp: $(date -u)" >> audit.log
+          fi
+
+      - name: Audit - Push attempted
+        run: |
+          echo "Push to CNB attempted" >> audit.log
+          echo "Branch: main" >> audit.log
+          echo "Timestamp: $(date -u)" >> audit.log
+
+      - name: Upload audit log
+        uses: actions/upload-artifact@v5
+        with:
+          name: sync-to-cnb-audit-log
+          path: audit.log
+          retention-days: 30
