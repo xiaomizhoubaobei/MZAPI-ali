@@ -54,8 +54,6 @@ $:
             - echo "API文档专家智能体安装完成"
             - iflow agent add "format_html_agent" --scope global
             - echo "HTML编写专家智能体安装完成"
-            - iflow agent add "tutorial-engineer" --scope global
-            - echo "教程编写专家智能体安装完成"
             - iflow agent add "error-detective" --scope global
             - echo "错误检测专家智能体安装完成"
             - iflow agent add "legacy-modernizer" --scope global
