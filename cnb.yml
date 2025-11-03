@@ -1,0 +1,68 @@
+$:
+  vscode:
+    - runner:
+        cpus: 64
+      services:
+        - vscode
+        - docker
+      docker:
+        image: docker.cnb.cool/xmzzuzhi/cnb-docker/node:0.0.5
+      stages:
+        - name: 授予install_gpg_keys.sh权限
+          script:
+            - chmod +x /workspace/install_gpg_keys.sh
+        - name: 安装sudo更新APT源
+          script:
+            - apt-get update
+            - apt-get install -y sudo
+            - echo "依赖完成"
+        - name: 安装iflow
+          script:
+          - npm i -g @iflow-ai/iflow-cli@latest
+          - echo "iflow安装完成"
+        - name: 安装Git LFS
+          script:
+          - sudo apt-get install -y git-lfs
+          - git lfs install
+          - echo "Git LFS安装完成"
+        - name: 安装Gemini
+          script:
+            - npm install -g @google/gemini-cli
+            - echo "Gemini安装完成"
+        - name: 下载并替换settings.json
+          script:
+            - mkdir -p /root/.iflow
+            - curl -o /root/.iflow/settings.json https://astrbot.mizhoubaobei.top/1.json 
+            - echo "已下载并替换 /root/.iflow/settings.json"
+        - name: 安装iflow智能体
+          script:
+            - iflow agent add "typescript-pro" --scope global
+            - echo "typescript专家智能体安装完成"
+            - iflow agent add "tutorial-engineer" --scope global
+            - echo "教程编写专家智能体安装完成"
+            - iflow agent add "docs-architect" --scope global
+            - echo "文档架构师智能体安装完成"
+            - iflow agent add "backend-architect" --scope global
+            - echo "后端架构师智能体安装完成"
+            - iflow agent add "code-reviewer" --scope global
+            - echo "代码审查专家智能体安装完成"
+            - iflow agent add "security-auditor" --scope global
+            - echo "安全审计专家智能体安装完成"
+            - iflow agent add "architect-reviewer" --scope global
+            - echo "架构师审查专家智能体安装完成"
+            - iflow agent add "api-documenter" --scope global
+            - echo "API文档专家智能体安装完成"
+            - iflow agent add "format_html_agent" --scope global
+            - echo "HTML编写专家智能体安装完成"
+            - iflow agent add "tutorial-engineer" --scope global
+            - echo "教程编写专家智能体安装完成"
+            - iflow agent add "error-detective" --scope global
+            - echo "错误检测专家智能体安装完成"
+            - iflow agent add "legacy-modernizer" --scope global
+            - echo "遗留代码专家智能体安装完成"
+            - iflow agent add "frontend-developer" --scope global
+            - echo "前端开发专家智能体安装完成"
+            - iflow agent add "debugger" --scope global
+            - echo "调试专家智能体安装完成"
+            - iflow agent add "performance-engineer" --scope global
+            - echo "性能专家智能体安装完成"
