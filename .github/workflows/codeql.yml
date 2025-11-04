@@ -96,6 +96,6 @@ jobs:
       - name: Upload audit log
         uses: actions/upload-artifact@v5
         with:
-          name: codeql-audit-log
+          name: codeql-audit-log-${{ matrix.os }}-${{ matrix.language }}
           path: audit.log
           retention-days: 30
