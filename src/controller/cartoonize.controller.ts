@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { CartoonizeService } from '../service/cartoonize.service';
 import { CartoonizeDto } from '../dto/cartoonize.dto';
 import axios from 'axios';
+import { Logger } from '../logger';
 
 export class CartoonizeController {
   private cartoonizeService: CartoonizeService;
@@ -11,31 +12,18 @@ export class CartoonizeController {
   }
 
   async cartoonizeImage(req: Request, res: Response): Promise<void> {
-    console.log('【控制器层】收到图像卡通化请求');
-    console.log('【控制器层】客户端IP:', req.ip);
-    console.log('【控制器层】完整请求信息:', {
+    const ip = req.ip || req.connection.remoteAddress;
+    const requestId = req.headers['x-request-id'] as string || undefined;
+    const userAgent = req.get('user-agent');
+    const userId = (req as any).userId || 'anonymous'; // 从请求中获取用户ID，如果没有则为匿名用户
+    
+    Logger.info('CartoonizeController', 'cartoonizeImage', '收到图像卡通化请求', {
       method: req.method,
       url: req.url,
-      originalUrl: req.originalUrl,
-      baseUrl: req.baseUrl,
-      params: req.params,
-      query: req.query,
-      headers: req.headers,
-      body: req.body,
-      ip: req.ip,
-      ips: req.ips,
-      protocol: req.protocol,
-      secure: req.secure,
-      xhr: req.xhr,
-      fresh: req.fresh,
-      stale: req.stale,
-      subdomains: req.subdomains,
-      hostname: req.hostname,
-      path: req.path,
-      host: req.get('host'),
-      'content-type': req.get('content-type'),
-      'user-agent': req.get('user-agent'),
-      'content-length': req.get('content-length')
+      ip,
+      userAgent,
+      requestId,
+      userId
     });
     
     try {
@@ -43,7 +31,19 @@ export class CartoonizeController {
 
       // 验证输入
       if (!imageUrl) {
-        console.warn('【控制器层】缺少图像URL参数');
+        Logger.warn('CartoonizeController', 'cartoonizeImage', '缺少图像URL参数', {
+          ip,
+          requestId,
+          userId
+        });
+        
+        // 记录审计日志
+        Logger.audit('CREATE', 'IMAGE_TASK', 'FAILED', '图像卡通化请求失败：缺少图像URL参数', {
+          ip,
+          requestId,
+          userId
+        });
+        
         res.status(400).json({ 
           error: '图像URL是必需的', 
           code: 'MISSING_IMAGE_URL' 
@@ -55,7 +55,20 @@ export class CartoonizeController {
       try {
         new URL(imageUrl);
       } catch (urlError) {
-        console.warn('【控制器层】无效的图像URL格式:', imageUrl);
+        Logger.warn('CartoonizeController', 'cartoonizeImage', '无效的图像URL格式', {
+          imageUrl: imageUrl?.substring(0, 50) + '...', // 只记录URL的前50个字符以保护隐私
+          ip,
+          requestId,
+          userId
+        });
+        
+        // 记录审计日志
+        Logger.audit('CREATE', 'IMAGE_TASK', 'FAILED', '图像卡通化请求失败：无效的图像URL格式', {
+          ip,
+          requestId,
+          userId
+        });
+        
         res.status(400).json({ 
           error: '无效的图像URL格式', 
           code: 'INVALID_URL_FORMAT' 
@@ -63,13 +76,36 @@ export class CartoonizeController {
         return;
       }
 
-      console.log('【控制器层】开始处理图像:', imageUrl);
-      console.log('【控制器层】正在调用服务层进行图像卡通化处理...');
+      Logger.info('CartoonizeController', 'cartoonizeImage', '开始处理图像', {
+        imageUrl: imageUrl?.substring(0, 50) + '...', // 只记录URL的前50个字符以保护隐私
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 开始处理
+      Logger.audit('CREATE', 'IMAGE_TASK', 'STARTED', '开始图像卡通化处理', {
+        ip,
+        requestId,
+        userId
+      });
       
       // 调用服务层处理
-      const resultUrl = await this.cartoonizeService.cartoonizeImage(imageUrl);
+      const resultUrl = await this.cartoonizeService.cartoonizeImage(imageUrl, userId, requestId);
       
-      console.log('【控制器层】图像处理完成，准备返回结果给客户端');
+      Logger.info('CartoonizeController', 'cartoonizeImage', '图像处理完成，准备返回结果给客户端', {
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 处理成功
+      Logger.audit('CREATE', 'IMAGE_TASK', 'SUCCESS', '图像卡通化处理成功', {
+        ip,
+        requestId,
+        userId
+      });
+      
       res.status(200).json({ 
         success: true, 
         originalUrl: imageUrl,
@@ -77,8 +113,21 @@ export class CartoonizeController {
         timestamp: new Date().toISOString(),
         message: '图像卡通化处理成功'
       });
-    } catch (error) {
-      console.error('【控制器层】图像卡通化过程中发生错误:', error);
+    } catch (error: any) {
+      Logger.error('CartoonizeController', 'cartoonizeImage', '图像卡通化过程中发生错误', {
+        error: error.message,
+        stack: error.stack,
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 处理失败
+      Logger.audit('CREATE', 'IMAGE_TASK', 'FAILED', `图像卡通化处理失败：${error.message}`, {
+        ip,
+        requestId,
+        userId
+      });
       
       // 根据错误类型返回不同的状态码
       if (error instanceof TypeError && error.message.includes('URL')) {
@@ -99,25 +148,58 @@ export class CartoonizeController {
   }
 
   getApiInfo(req: Request, res: Response): void {
-    console.log('【控制器层】收到API信息请求');
-    console.log('【控制器层】请求来源IP:', req.ip);
+    const ip = req.ip || req.connection.remoteAddress;
+    const requestId = req.headers['x-request-id'] as string || undefined;
+    const userId = (req as any).userId || 'anonymous';
+    
+    Logger.info('CartoonizeController', 'getApiInfo', '收到API信息请求', {
+      ip,
+      requestId,
+      userId
+    });
     
     res.status(200).json({ 
       message: '图像卡通化API服务', 
       endpoints: {
-        'POST /api/modelscope/cartoonize': '将图像转换为卡通风格',
-        'POST /api/modelscope/submit': '代理ModelScope提交接口',
-        'POST /api/modelscope/query': '代理ModelScope查询接口',
+        'POST /api/modelscope/cartoonize': '将图像转换为卡通风格'
       },
       description: '发送图像URL以获取卡通化版本',
       timestamp: new Date().toISOString()
     });
     
-    console.log('【控制器层】已返回API信息响应');
+    Logger.info('CartoonizeController', 'getApiInfo', '已返回API信息响应', {
+      ip,
+      requestId,
+      userId
+    });
+    
+    // 记录审计日志
+    Logger.audit('READ', 'API_INFO', 'SUCCESS', '获取API信息成功', {
+      ip,
+      requestId,
+      userId
+    });
   }
 
   async proxyModelscopeSubmit(req: Request, res: Response): Promise<void> {
+    const ip = req.ip || req.connection.remoteAddress;
+    const requestId = req.headers['x-request-id'] as string || undefined;
+    const userId = (req as any).userId || 'anonymous';
+    
     try {
+      Logger.info('CartoonizeController', 'proxyModelscopeSubmit', '收到ModelScope提交代理请求', {
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 开始代理请求
+      Logger.audit('CREATE', 'PROXY_TASK', 'STARTED', '开始ModelScope提交代理请求', {
+        ip,
+        requestId,
+        userId
+      });
+      
       // 转发请求到ModelScope API
       const MODEL = 'iic/cv_unet_person-image-cartoon-3d_compound-models';
       const url = `https://modelscope.cn/api/v1/models/${MODEL}/widgets/submit`;
@@ -130,9 +212,38 @@ export class CartoonizeController {
       
       const response = await axios.post(url, req.body, { headers });
       
+      Logger.info('CartoonizeController', 'proxyModelscopeSubmit', 'ModelScope提交代理请求成功', {
+        status: response.status,
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 代理请求成功
+      Logger.audit('CREATE', 'PROXY_TASK', 'SUCCESS', 'ModelScope提交代理请求成功', {
+        status: response.status,
+        ip,
+        requestId,
+        userId
+      });
+      
       res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error('【控制器层】ModelScope提交代理请求失败:', error);
+    } catch (error: any) {
+      Logger.error('CartoonizeController', 'proxyModelscopeSubmit', 'ModelScope提交代理请求失败', {
+        error: error.message,
+        stack: error.stack,
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 代理请求失败
+      Logger.audit('CREATE', 'PROXY_TASK', 'FAILED', `ModelScope提交代理请求失败：${error.message}`, {
+        ip,
+        requestId,
+        userId
+      });
+      
       res.status(500).json({ 
         error: '代理请求失败', 
         message: error instanceof Error ? error.message : '发生未知错误'
@@ -141,7 +252,24 @@ export class CartoonizeController {
   }
 
   async proxyModelscopeQuery(req: Request, res: Response): Promise<void> {
+    const ip = req.ip || req.connection.remoteAddress;
+    const requestId = req.headers['x-request-id'] as string || undefined;
+    const userId = (req as any).userId || 'anonymous';
+    
     try {
+      Logger.info('CartoonizeController', 'proxyModelscopeQuery', '收到ModelScope查询代理请求', {
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 开始代理请求
+      Logger.audit('READ', 'PROXY_TASK', 'STARTED', '开始ModelScope查询代理请求', {
+        ip,
+        requestId,
+        userId
+      });
+      
       // 转发请求到ModelScope API
       const MODEL = 'iic/cv_unet_person-image-cartoon-3d_compound-models';
       const url = `https://modelscope.cn/api/v1/models/${MODEL}/widgets/query`;
@@ -154,9 +282,38 @@ export class CartoonizeController {
       
       const response = await axios.post(url, req.body, { headers });
       
+      Logger.info('CartoonizeController', 'proxyModelscopeQuery', 'ModelScope查询代理请求成功', {
+        status: response.status,
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 代理请求成功
+      Logger.audit('READ', 'PROXY_TASK', 'SUCCESS', 'ModelScope查询代理请求成功', {
+        status: response.status,
+        ip,
+        requestId,
+        userId
+      });
+      
       res.status(response.status).json(response.data);
-    } catch (error) {
-      console.error('【控制器层】ModelScope查询代理请求失败:', error);
+    } catch (error: any) {
+      Logger.error('CartoonizeController', 'proxyModelscopeQuery', 'ModelScope查询代理请求失败', {
+        error: error.message,
+        stack: error.stack,
+        ip,
+        requestId,
+        userId
+      });
+      
+      // 记录审计日志 - 代理请求失败
+      Logger.audit('READ', 'PROXY_TASK', 'FAILED', `ModelScope查询代理请求失败：${error.message}`, {
+        ip,
+        requestId,
+        userId
+      });
+      
       res.status(500).json({ 
         error: '代理请求失败', 
         message: error instanceof Error ? error.message : '发生未知错误'
