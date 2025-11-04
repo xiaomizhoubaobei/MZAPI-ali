@@ -36,32 +36,11 @@ $:
             - echo "已下载并替换 /root/.iflow/settings.json"
         - name: 安装iflow智能体
           script:
-            - iflow agent add "typescript-pro" --scope global
-            - echo "typescript专家智能体安装完成"
-            - iflow agent add "tutorial-engineer" --scope global
-            - echo "教程编写专家智能体安装完成"
-            - iflow agent add "docs-architect" --scope global
-            - echo "文档架构师智能体安装完成"
-            - iflow agent add "backend-architect" --scope global
-            - echo "后端架构师智能体安装完成"
-            - iflow agent add "code-reviewer" --scope global
-            - echo "代码审查专家智能体安装完成"
-            - iflow agent add "security-auditor" --scope global
-            - echo "安全审计专家智能体安装完成"
-            - iflow agent add "architect-reviewer" --scope global
-            - echo "架构师审查专家智能体安装完成"
-            - iflow agent add "api-documenter" --scope global
-            - echo "API文档专家智能体安装完成"
-            - iflow agent add "format_html_agent" --scope global
-            - echo "HTML编写专家智能体安装完成"
-            - iflow agent add "error-detective" --scope global
-            - echo "错误检测专家智能体安装完成"
-            - iflow agent add "legacy-modernizer" --scope global
-            - echo "遗留代码专家智能体安装完成"
-            - iflow agent add "frontend-developer" --scope global
-            - echo "前端开发专家智能体安装完成"
-            - iflow agent add "debugger" --scope global
-            - echo "调试专家智能体安装完成"
-            - iflow agent add "performance-engineer" --scope global
-            - echo "性能专家智能体安装完成"
-            
+            - chmod +x /workspace/install_agents.sh
+            - /workspace/install_agents.sh
+        - name: 安装gemini-cli扩展
+          script:
+          - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
+          - gemini extensions install https://github.com/gemini-cli-extensions/security
+          - gemini extensions install https://github.com/gemini-cli-extensions/code-review
+          - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
