@@ -1,7 +1,7 @@
 $:
   vscode:
     - runner:
-        cpus: 64
+        cpus: 16
       services:
         - vscode
         - docker
@@ -14,7 +14,7 @@ $:
         - name: 安装sudo更新APT源
           script:
             - apt-get update
-            - apt-get install -y sudo
+            - apt-get install -y sudo lsof net-tools
             - echo "依赖完成"
         - name: 安装iflow
           script:
@@ -44,3 +44,10 @@ $:
           - gemini extensions install https://github.com/gemini-cli-extensions/security
           - gemini extensions install https://github.com/gemini-cli-extensions/code-review
           - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
+        - name: 添加Github远端
+          script:
+              - git remote add  github https://github.com/xiaomizhoubaobei/MZAPI-ali.git
+        - name: 安装 iFlow JetBrains 插件
+          script:
+          - cd /ide_cnb/WebStorm-252.26830.93/bin
+          - ./webstorm.sh installPlugins com.iflow.idea
