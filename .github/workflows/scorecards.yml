@@ -1,0 +1,66 @@
+# 此工作流使用了GitHub未认证的操作。这些操作由第三方提供，受单独的服务条款、隐私政策和支持文档的约束。
+
+name: Scorecard 供应链安全
+on:
+  # 用于分支保护检查。仅支持默认分支。参见
+  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
+  # 为了保证维护检查偶尔更新。参见
+  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintained
+  branch_protection_rule:
+  schedule:
+    - cron: '20 7 * * 2'
+  push:
+    branches: ["main"]
+
+# 声明默认权限为只读。
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard 分析
+    runs-on: ubuntu-latest
+    permissions:
+      # 用于将结果上传到代码扫描仪表板。
+      security-events: write
+      # 用于发布结果并获取徽章（参见 publish_results）。
+      id-token: write
+      contents: read
+      actions: read
+      # 用于允许 GraphQL ListCommits 工作
+      issues: read
+      pull-requests: read
+      # 用于检测 SAST 工具
+      checks: read
+
+    steps:
+      - name: 加固运行器（审计所有出站调用）
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: "检出代码"
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with:
+          persist-credentials: false
+
+      - name: "运行分析"
+        uses: ossf/scorecard-action@62b2cac7ed8198b15735ed49ab1e5cf35480ba46 # v2.4.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      # 将结果作为工件上传（可选）。如果注释掉，将禁用将运行结果以 SARIF
+      # 格式上传到仓库 Actions 标签页。
+      - name: "上传工件"
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: SARIF 文件
+          path: results.sarif
+          retention-days: 5
+
+      # 将结果上传到 GitHub 的代码扫描仪表板。
+      - name: "上传到代码扫描"
+        uses: github/codeql-action/upload-sarif@5d5cd550d3e189c569da8f16ea8de2d821c9bf7a # v3.31.2
+        with:
+          sarif_file: results.sarif
