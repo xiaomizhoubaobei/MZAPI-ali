@@ -41,6 +41,7 @@ jobs:
     # 对于私有仓库，拥有仓库访问权限的用户即被视为受信任。
     # 对于公开仓库，仅限成员、所有者或协作者被视为受信任。
     if: |-
+      github.event.sender.type != 'Bot' ||
       github.event_name == 'workflow_dispatch' ||
       (
         github.event_name == 'pull_request' &&
@@ -91,6 +92,11 @@ jobs:
       )
     runs-on: 'ubuntu-latest'
     steps:
+      -  name: Harden the runner (Audit all outbound calls)
+         uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+         with:
+            egress-policy: audit
+
       - name: 'Checkout PR code'
         uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v4
 
@@ -160,7 +166,7 @@ jobs:
           } >> "${GITHUB_OUTPUT}"
 
       - name: 'Run iFLOW CLI PR Review'
-        uses: iflow-ai/iflow-cli-action@v2.1.0
+        uses: iflow-ai/iflow-cli-action@5033255d7d73eab7dc4970f1ac8df7a93f30fdbc # v2.1.0
         id: 'iflow_cli_pr_review'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
