@@ -3,6 +3,8 @@ on:
   pull_request:
     types: [opened, reopened, ready_for_review]
   issue_comment:
+    permissions:
+      contents: read
 jobs:
   pr_agent_job:
     if: ${{ github.event.sender.type != 'Bot' }}
@@ -12,8 +14,12 @@ jobs:
       pull-requests: write
       contents: write
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+        with:
+           egress-policy: audit
       - name: PR Agent action step
-        uses: qodo-ai/pr-agent@main
+        uses: qodo-ai/pr-agent@d36ad319f7fb0049205017405a71275c41599587 # main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           config.model: "gemini/gemini-1.5-flash"
