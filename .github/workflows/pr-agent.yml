@@ -5,6 +5,9 @@ on:
   issue_comment:
     permissions:
       contents: read
+permissions:
+  contents: read
+
 jobs:
   pr_agent_job:
     if: ${{ github.event.sender.type != 'Bot' }}
