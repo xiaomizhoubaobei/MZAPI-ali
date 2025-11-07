@@ -88,14 +88,15 @@ docker-compose up -d
 返回API基本信息和可用端点。
 
 **响应示例:**
+
 ```json
 {
-  "message": "图像卡通化API服务",
-  "endpoints": {
-    "POST /api/modelscope/cartoonize": "将图像转换为卡通风格"
-  },
-  "description": "发送图像URL以获取卡通化版本",
-  "timestamp": "2023-04-01T12:00:00.000Z"
+    "message": "图像卡通化API服务",
+    "endpoints": {
+        "POST /api/modelscope/cartoonize": "将图像转换为卡通风格"
+    },
+    "description": "发送图像URL以获取卡通化版本",
+    "timestamp": "2023-04-01T12:00:00.000Z"
 }
 ```
 
@@ -104,25 +105,27 @@ docker-compose up -d
 将图像转换为卡通风格。
 
 **请求体:**
+
 ```json
 {
-  "imageUrl": "https://example.com/image.jpg"
+    "imageUrl": "https://example.com/image.jpg"
 }
 ```
 
 **响应示例:**
+
 ```json
 {
-  "success": true,
-  "originalUrl": "https://example.com/image.jpg",
-  "cartoonizedUrl": "https://modelscope.cn/output/cartoonized.jpg",
-  "timestamp": "2023-04-01T12:00:00.000Z",
-  "message": "图像卡通化处理成功",
-  "processingOptions": {
-    "quality": "medium",
-    "maxWidth": 1920,
-    "optimizeForData": false
-  }
+    "success": true,
+    "originalUrl": "https://example.com/image.jpg",
+    "cartoonizedUrl": "https://modelscope.cn/output/cartoonized.jpg",
+    "timestamp": "2023-04-01T12:00:00.000Z",
+    "message": "图像卡通化处理成功",
+    "processingOptions": {
+        "quality": "medium",
+        "maxWidth": 1920,
+        "optimizeForData": false
+    }
 }
 ```
 
@@ -137,12 +140,13 @@ API使用标准HTTP状态码表示响应结果：
 - `500` - 服务器内部错误
 
 **错误响应格式:**
+
 ```json
 {
-  "error": "错误描述",
-  "message": "详细错误信息",
-  "code": "错误代码",
-  "timestamp": "2023-04-01T12:00:00.000Z"
+    "error": "错误描述",
+    "message": "详细错误信息",
+    "code": "错误代码",
+    "timestamp": "2023-04-01T12:00:00.000Z"
 }
 ```
 
@@ -164,11 +168,13 @@ Dockerfile使用多阶段构建，确保了镜像的轻量化和安全性。
 我们提供了预构建的Docker镜像，可以直接使用：
 
 GitHub Packages:
+
 ```bash
 docker pull ghcr.io/xiaomizhoubaobei/mzapi-ali
 ```
 
 Docker Hub:
+
 ```bash
 docker pull qixiaoxin/iflow-cartoonize-api
 ```

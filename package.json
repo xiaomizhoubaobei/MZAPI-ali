@@ -1,36 +1,36 @@
 {
-  "name": "iflow-cartoonize-api",
-  "version": "1.0.0",
-  "description": "API for image cartoonization service",
-  "main": "dist/main.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "node dist/main.js",
-    "dev": "nodemon --watch src --exec ts-node src/main.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [
-    "image",
-    "cartoonize",
-    "api",
-    "express"
-  ],
-  "author": "iFlow Team",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^1.13.2",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/node": "^24.10.0",
-    "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
-  },
-  "repository": "https://cnb.cool/XMZZUZHI/MZAPI/ali.git"
+    "name": "iflow-cartoonize-api",
+    "version": "1.0.0",
+    "description": "API for image cartoonization service",
+    "main": "dist/main.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/main.js",
+        "dev": "nodemon --watch src --exec ts-node src/main.ts",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "image",
+        "cartoonize",
+        "api",
+        "express"
+    ],
+    "author": "iFlow Team",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.13.2",
+        "cors": "^2.8.5",
+        "express": "^5.1.0",
+        "winston": "^3.18.3",
+        "winston-daily-rotate-file": "^5.0.0"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.5",
+        "@types/node": "^24.10.0",
+        "nodemon": "^3.1.10",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.9.3"
+    },
+    "repository": "https://cnb.cool/XMZZUZHI/MZAPI/ali.git"
 }

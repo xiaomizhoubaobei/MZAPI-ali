@@ -1,49 +1,49 @@
 $:
-  vscode:
-    - runner:
-        cpus: 16
-      services:
-        - vscode
-        - docker
-      docker:
-        image: docker.cnb.cool/xmzzuzhi/cnb-docker/node:0.0.5
-      stages:
-        - name: 授予install_gpg_keys.sh权限
-          script:
-            - chmod +x /workspace/install_gpg_keys.sh
-        - name: 安装sudo更新APT源
-          script:
-            - apt-get update
-            - apt-get install -y sudo lsof net-tools
-            - echo "依赖完成"
-        - name: 安装iflow
-          script:
-          - npm i -g @iflow-ai/iflow-cli@latest
-          - echo "iflow安装完成"
-        - name: 安装Git LFS
-          script:
-          - sudo apt-get install -y git-lfs
-          - git lfs install
-          - echo "Git LFS安装完成"
-        - name: 安装Gemini
-          script:
-            - npm install -g @google/gemini-cli
-            - echo "Gemini安装完成"
-        - name: 下载并替换settings.json
-          script:
-            - mkdir -p /root/.iflow
-            - curl -o /root/.iflow/settings.json https://astrbot.mizhoubaobei.top/1.json 
-            - echo "已下载并替换 /root/.iflow/settings.json"
-        - name: 安装iflow智能体
-          script:
-            - chmod +x /workspace/install_agents.sh
-            - /workspace/install_agents.sh
-        - name: 安装gemini-cli扩展
-          script:
-          - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
-          - gemini extensions install https://github.com/gemini-cli-extensions/security
-          - gemini extensions install https://github.com/gemini-cli-extensions/code-review
-          - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
-        - name: 添加Github远端
-          script:
-              - git remote add  github https://github.com/xiaomizhoubaobei/MZAPI-ali.git
+    vscode:
+        - runner:
+              cpus: 16
+          services:
+              - vscode
+              - docker
+          docker:
+              image: docker.cnb.cool/xmzzuzhi/cnb-docker/node:0.0.5
+          stages:
+              - name: 授予install_gpg_keys.sh权限
+                script:
+                    - chmod +x /workspace/install_gpg_keys.sh
+              - name: 安装sudo更新APT源
+                script:
+                    - apt-get update
+                    - apt-get install -y sudo lsof net-tools
+                    - echo "依赖完成"
+              - name: 安装iflow
+                script:
+                    - npm i -g @iflow-ai/iflow-cli@latest
+                    - echo "iflow安装完成"
+              - name: 安装Git LFS
+                script:
+                    - sudo apt-get install -y git-lfs
+                    - git lfs install
+                    - echo "Git LFS安装完成"
+              - name: 安装Gemini
+                script:
+                    - npm install -g @google/gemini-cli
+                    - echo "Gemini安装完成"
+              - name: 下载并替换settings.json
+                script:
+                    - mkdir -p /root/.iflow
+                    - curl -o /root/.iflow/settings.json https://astrbot.mizhoubaobei.top/1.json
+                    - echo "已下载并替换 /root/.iflow/settings.json"
+              - name: 安装iflow智能体
+                script:
+                    - chmod +x /workspace/install_agents.sh
+                    - /workspace/install_agents.sh
+              - name: 安装gemini-cli扩展
+                script:
+                    - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
+                    - gemini extensions install https://github.com/gemini-cli-extensions/security
+                    - gemini extensions install https://github.com/gemini-cli-extensions/code-review
+                    - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
+              - name: 添加Github远端
+                script:
+                    - git remote add  github https://github.com/xiaomizhoubaobei/MZAPI-ali.git

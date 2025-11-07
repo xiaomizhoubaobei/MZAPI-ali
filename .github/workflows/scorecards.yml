@@ -2,65 +2,65 @@
 
 name: Scorecard 供应链安全
 on:
-  # 用于分支保护检查。仅支持默认分支。参见
-  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
-  # 为了保证维护检查偶尔更新。参见
-  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintained
-  branch_protection_rule:
-  schedule:
-    - cron: '20 7 * * 2'
-  push:
-    branches: ["main"]
+    # 用于分支保护检查。仅支持默认分支。参见
+    # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
+    # 为了保证维护检查偶尔更新。参见
+    # https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintained
+    branch_protection_rule:
+    schedule:
+        - cron: "20 7 * * 2"
+    push:
+        branches: ["main"]
 
 # 声明默认权限为只读。
 permissions: read-all
 
 jobs:
-  analysis:
-    name: Scorecard 分析
-    runs-on: ubuntu-latest
-    permissions:
-      # 用于将结果上传到代码扫描仪表板。
-      security-events: write
-      # 用于发布结果并获取徽章（参见 publish_results）。
-      id-token: write
-      contents: read
-      actions: read
-      # 用于允许 GraphQL ListCommits 工作
-      issues: read
-      pull-requests: read
-      # 用于检测 SAST 工具
-      checks: read
+    analysis:
+        name: Scorecard 分析
+        runs-on: ubuntu-latest
+        permissions:
+            # 用于将结果上传到代码扫描仪表板。
+            security-events: write
+            # 用于发布结果并获取徽章（参见 publish_results）。
+            id-token: write
+            contents: read
+            actions: read
+            # 用于允许 GraphQL ListCommits 工作
+            issues: read
+            pull-requests: read
+            # 用于检测 SAST 工具
+            checks: read
 
-    steps:
-      - name: 加固运行器（审计所有出站调用）
-        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
-        with:
-          egress-policy: audit
+        steps:
+            - name: 加固运行器（审计所有出站调用）
+              uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
+              with:
+                  egress-policy: audit
 
-      - name: "检出代码"
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          persist-credentials: false
+            - name: "检出代码"
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+              with:
+                  persist-credentials: false
 
-      - name: "运行分析"
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
-        with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
+            - name: "运行分析"
+              uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a # v2.4.3
+              with:
+                  results_file: results.sarif
+                  results_format: sarif
+                  publish_results: true
 
-      # 将结果作为工件上传（可选）。如果注释掉，将禁用将运行结果以 SARIF
-      # 格式上传到仓库 Actions 标签页。
-      - name: "上传工件"
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          name: SARIF 文件
-          path: results.sarif
-          retention-days: 5
+            # 将结果作为工件上传（可选）。如果注释掉，将禁用将运行结果以 SARIF
+            # 格式上传到仓库 Actions 标签页。
+            - name: "上传工件"
+              uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+              with:
+                  name: SARIF 文件
+                  path: results.sarif
+                  retention-days: 5
 
-      # 将结果上传到 GitHub 的代码扫描仪表板。
-      - name: "上传到代码扫描"
-        uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4.31.2
-        with:
-          sarif_file: results.sarif
+            # 将结果上传到 GitHub 的代码扫描仪表板。
+            - name: "上传到代码扫描"
+              uses: github/codeql-action/upload-sarif@0499de31b99561a6d14a36a5f662c2a54f91beee # v4.31.2
+              with:
+                  sarif_file: results.sarif
