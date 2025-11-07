@@ -7,7 +7,20 @@ on:
             contents: read
 jobs:
     pr_agent_job:
-        if: ${{ github.event.sender.type != 'Bot' }}
+        if:
+            github.event.sender.type != 'Bot' ||
+            !contains(github.event.sender.login, 'bot') ||
+            !contains(github.event.sender.login, '[bot]') ||
+            !contains(github.event.sender.login, '(Bot)') ||
+            github.event.workflow_run.head_commit.author.login != github.event.sender.login ||
+            !contains(github.event.workflow_run.head_commit.author.login, 'bot') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '[bot]') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '(Bot)') ||
+            (github.event_name != 'pull_request' || (
+            github.event.pull_request.user.login != github.event.sender.login ||
+            !contains(github.event.pull_request.user.login, 'bot') ||
+            !contains(github.event.pull_request.user.login, '[bot]') ||
+            !contains(github.event.pull_request.user.login, '(Bot)')))
         runs-on: ubuntu-latest
         permissions:
             issues: write

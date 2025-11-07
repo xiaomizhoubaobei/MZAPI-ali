@@ -15,7 +15,20 @@ jobs:
         permissions:
             contents: write # for Git to git push
         runs-on: ubuntu-latest
-        if: github.event.pull_request.merged == true && github.event.sender.type != 'Bot'
+        if: github.event.pull_request.merged == true ||
+            github.event.sender.type != 'Bot' ||
+            !contains(github.event.sender.login, 'bot') ||
+            !contains(github.event.sender.login, '[bot]') ||
+            !contains(github.event.sender.login, '(Bot)') ||
+            github.event.workflow_run.head_commit.author.login != github.event.sender.login ||
+            !contains(github.event.workflow_run.head_commit.author.login, 'bot') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '[bot]') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '(Bot)') ||
+            (github.event_name != 'pull_request' || (
+            github.event.pull_request.user.login != github.event.sender.login ||
+            !contains(github.event.pull_request.user.login, 'bot') ||
+            !contains(github.event.pull_request.user.login, '[bot]') ||
+            !contains(github.event.pull_request.user.login, '(Bot)')))
         env:
             CNB_USER: ${{ secrets.CNB_USER }}
             CNB_EMAIL: ${{ secrets.CNB_EMAIL }}
