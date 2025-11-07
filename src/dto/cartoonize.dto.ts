@@ -1,3 +1,3 @@
 export class CartoonizeDto {
-  imageUrl: string;
+    imageUrl: string;
 }
