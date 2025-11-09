@@ -13,8 +13,7 @@ permissions:
 
 jobs:
     build:
-        if:
-            github.event.sender.type != 'Bot' ||
+        if: github.event.sender.type != 'Bot' ||
             !contains(github.event.sender.login, 'bot') ||
             !contains(github.event.sender.login, '[bot]') ||
             !contains(github.event.sender.login, '(Bot)') ||

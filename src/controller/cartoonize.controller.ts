@@ -6,13 +6,43 @@ import { Logger } from "../logger";
 export class CartoonizeController {
     private cartoonizeService: CartoonizeService;
 
-    constructor() {
-        this.cartoonizeService = new CartoonizeService();
+    constructor(cartoonizeService?: CartoonizeService) {
+        if (cartoonizeService) {
+            this.cartoonizeService = cartoonizeService;
+        } else {
+            this.cartoonizeService = new CartoonizeService();
+        }
+    }
+
+    /**
+     * 获取客户端真实IP地址
+     * 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
+     * @param req Express请求对象
+     * @returns 客户端IP地址
+     */
+    private getClientIp(req: Request): string {
+        // 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
+        if (req.headers["ali-cdn-real-ip"]) {
+            return req.headers["ali-cdn-real-ip"] as string;
+        }
+
+        // 其次使用标准的req.ip
+        if (req.ip) {
+            return req.ip;
+        }
+
+        // 最后使用socket.remoteAddress
+        if (req.socket && req.socket.remoteAddress) {
+            return req.socket.remoteAddress;
+        }
+
+        // 如果都获取不到，返回未知
+        return "unknown";
     }
 
     async cartoonizeImage(req: Request, res: Response): Promise<void> {
-        const ip = req.ip || req.socket.remoteAddress;
-        const requestId = (req.headers["x-request-id"] as string) || undefined;
+        const ip = this.getClientIp(req);
+        const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
         const userAgent = req.get("user-agent");
         const userId = (req as any).userId || "anonymous"; // 从请求中获取用户ID，如果没有则为匿名用户
 
@@ -27,7 +57,7 @@ export class CartoonizeController {
                 userAgent,
                 requestId,
                 userId,
-            },
+            }
         );
 
         try {
@@ -43,7 +73,7 @@ export class CartoonizeController {
                         ip,
                         requestId,
                         userId,
-                    },
+                    }
                 );
 
                 // 记录审计日志
@@ -56,7 +86,7 @@ export class CartoonizeController {
                         ip,
                         requestId,
                         userId,
-                    },
+                    }
                 );
 
                 res.status(400).json({
@@ -79,7 +109,7 @@ export class CartoonizeController {
                         ip,
                         requestId,
                         userId,
-                    },
+                    }
                 );
 
                 // 记录审计日志
@@ -92,7 +122,7 @@ export class CartoonizeController {
                         ip,
                         requestId,
                         userId,
-                    },
+                    }
                 );
 
                 res.status(400).json({
@@ -111,7 +141,7 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             // 记录审计日志 - 开始处理
@@ -124,14 +154,14 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             // 调用服务层处理
             const resultUrl = await this.cartoonizeService.cartoonizeImage(
                 imageUrl,
                 userId,
-                requestId,
+                requestId
             );
 
             Logger.info(
@@ -142,7 +172,7 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             // 记录审计日志 - 处理成功
@@ -155,7 +185,7 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             res.status(200).json({
@@ -176,7 +206,7 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             // 记录审计日志 - 处理失败
@@ -189,7 +219,7 @@ export class CartoonizeController {
                     ip,
                     requestId,
                     userId,
-                },
+                }
             );
 
             // 根据错误类型返回不同的状态码
@@ -203,8 +233,7 @@ export class CartoonizeController {
 
             res.status(500).json({
                 error: "图像处理失败",
-                message:
-                    error instanceof Error ? error.message : "发生未知错误",
+                message: error instanceof Error ? error.message : "发生未知错误",
                 code: "PROCESSING_ERROR",
                 timestamp: new Date().toISOString(),
             });
@@ -212,8 +241,8 @@ export class CartoonizeController {
     }
 
     getApiInfo(req: Request, res: Response): void {
-        const ip = req.ip || req.socket.remoteAddress;
-        const requestId = (req.headers["x-request-id"] as string) || undefined;
+        const ip = this.getClientIp(req);
+        const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
         const userId = (req as any).userId || "anonymous";
 
         Logger.info("CartoonizeController", "getApiInfo", "收到API信息请求", {
@@ -225,7 +254,7 @@ export class CartoonizeController {
         res.status(200).json({
             message: "图像卡通化API服务",
             endpoints: {
-                "POST /api/modelscope/cartoonize": "将图像转换为卡通风格",
+                "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格",
             },
             description: "发送图像URL以获取卡通化版本",
             timestamp: new Date().toISOString(),

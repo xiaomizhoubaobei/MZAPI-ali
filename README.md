@@ -93,14 +93,14 @@ docker-compose up -d
 {
     "message": "图像卡通化API服务",
     "endpoints": {
-        "POST /api/modelscope/cartoonize": "将图像转换为卡通风格"
+        "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格"
     },
     "description": "发送图像URL以获取卡通化版本",
     "timestamp": "2023-04-01T12:00:00.000Z"
 }
 ```
 
-### POST /api/modelscope/cartoonize
+### POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models
 
 将图像转换为卡通风格。
 

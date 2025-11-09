@@ -7,8 +7,7 @@ on:
             contents: read
 jobs:
     pr_agent_job:
-        if:
-            github.event.sender.type != 'Bot' ||
+        if: github.event.sender.type != 'Bot' ||
             !contains(github.event.sender.login, 'bot') ||
             !contains(github.event.sender.login, '[bot]') ||
             !contains(github.event.sender.login, '(Bot)') ||
