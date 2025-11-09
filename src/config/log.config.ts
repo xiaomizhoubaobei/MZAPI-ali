@@ -62,8 +62,3 @@ export const auditLogFormat = winston.format.combine(
         },
     ),
 );
-
-// 日志文件配置
-path.join(process.cwd(), "logs", "app-%DATE%.log");
-// 审计日志文件配置
-path.join(process.cwd(), "logs", "audit-%DATE%.log");

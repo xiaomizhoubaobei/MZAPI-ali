@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { CartoonizeService } from "../service/cartoonize.service";
 import { CartoonizeDto } from "../dto/cartoonize.dto";
 import { Logger } from "../logger";
+import {IpUtil} from "../utils/ip.util";
 
 export class CartoonizeController {
     private cartoonizeService: CartoonizeService;
@@ -13,35 +14,8 @@ export class CartoonizeController {
             this.cartoonizeService = new CartoonizeService();
         }
     }
-
-    /**
-     * 获取客户端真实IP地址
-     * 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
-     * @param req Express请求对象
-     * @returns 客户端IP地址
-     */
-    private getClientIp(req: Request): string {
-        // 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
-        if (req.headers["ali-cdn-real-ip"]) {
-            return req.headers["ali-cdn-real-ip"] as string;
-        }
-
-        // 其次使用标准的req.ip
-        if (req.ip) {
-            return req.ip;
-        }
-
-        // 最后使用socket.remoteAddress
-        if (req.socket && req.socket.remoteAddress) {
-            return req.socket.remoteAddress;
-        }
-
-        // 如果都获取不到，返回未知
-        return "unknown";
-    }
-
     async cartoonizeImage(req: Request, res: Response): Promise<void> {
-        const ip = this.getClientIp(req);
+        const ip = IpUtil.getClientIp(req);
         const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
         const userAgent = req.get("user-agent");
         const userId = (req as any).userId || "anonymous"; // 从请求中获取用户ID，如果没有则为匿名用户
@@ -241,7 +215,7 @@ export class CartoonizeController {
     }
 
     getApiInfo(req: Request, res: Response): void {
-        const ip = this.getClientIp(req);
+        const ip = IpUtil.getClientIp(req);
         const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
         const userId = (req as any).userId || "anonymous";
 

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Logger } from "../logger";
+import {IpUtil} from "../utils/ip.util";
 
 /**
  * 请求日志服务类
@@ -18,7 +19,7 @@ export class RequestLogService {
             requestId,
             url: req.url,
             userAgent: req.get("User-Agent"),
-            ip: this.getClientIp(req),
+            ip: IpUtil.getClientIp(req),
         });
     }
 
@@ -29,7 +30,7 @@ export class RequestLogService {
      */
     public static logRequestEnd(req: Request, res: Response): void {
         const duration = this.getDuration(req);
-        const ip = this.getClientIp(req);
+        const ip = IpUtil.getClientIp(req);
         const userId = (req as any).userId || "anonymous";
         const requestId = this.getRequestId(req);
 
@@ -44,7 +45,7 @@ export class RequestLogService {
                 ip,
                 requestId,
                 userId,
-            },
+            }
         );
 
         // 记录审计日志
@@ -59,7 +60,7 @@ export class RequestLogService {
                 ip,
                 requestId,
                 userId,
-            },
+            }
         );
     }
 
@@ -69,44 +70,15 @@ export class RequestLogService {
      * @returns 请求ID
      */
     private static getRequestId(req: Request): string {
-        return (
-            (req.headers["x-request-id"] as string) ||
-            (req.headers["x-correlation-id"] as string) ||
-            require("crypto").randomBytes(16).toString("hex")
-        );
+        return (req.headers["x-fc-request-id"] as string);
     }
 
-    /**
-     * 获取客户端真实IP地址
-     * 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
-     * @param req Express请求对象
-     * @returns 客户端IP地址
-     */
-    private static getClientIp(req: Request): string {
-        // 优先使用阿里云CDN的Ali-Cdn-Real-Ip头部
-        if (req.headers['ali-cdn-real-ip']) {
-            return req.headers['ali-cdn-real-ip'] as string;
-        }
-
-        // 其次使用标准的req.ip
-        if (req.ip) {
-            return req.ip;
-        }
-
-        // 最后使用socket.remoteAddress
-        if (req.socket && req.socket.remoteAddress) {
-            return req.socket.remoteAddress;
-        }
-
-        // 如果都获取不到，返回未知
-        return 'unknown';
-    }
-
-    /**
-     * 计算请求处理时长
-     * @param req Express请求对象
-     * @returns 处理时长（毫秒）
-     */
+
+    /**
+     * 计算请求处理时长
+     * @param req Express请求对象
+     * @returns 处理时长（毫秒）
+     */
     private static getDuration(req: Request): number {
         const startTime: number = (req as any).startTime || Date.now();
         return Date.now() - startTime;

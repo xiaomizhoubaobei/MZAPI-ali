@@ -1,16 +1,24 @@
 import express = require("express");
 import cors = require("cors");
 import { Logger } from "./logger";
-import {
-    headerInterceptor,
-    contentDigestInterceptor,
-    contentEncodingInterceptor,
-    requestLoggerMiddleware,
-    serverTimingInterceptor,
-    errorHandlerMiddleware,
-    notFoundMiddleware
+import {
+
+    headerInterceptor,
+
+    contentDigestInterceptor,
+
+    contentEncodingInterceptor,
+
+    requestLoggerMiddleware,
+
+    serverTimingInterceptor,
+
+    errorHandlerMiddleware,
+
+    notFoundMiddleware
+
 } from "./middleware";
-import { HttpMethodRestrictMiddleware } from "./middleware/http.method.restrict.middleware";
+import { HttpMethodRestrictMiddleware } from "./middleware";
 import appRouter from "./routes";
 
 const app: express.Application = express();
