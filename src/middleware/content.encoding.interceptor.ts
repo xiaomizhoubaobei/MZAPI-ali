@@ -4,24 +4,24 @@ import { Logger } from "../logger";
 import { createGzip, createDeflate, createBrotliCompress } from "zlib";
 import { Transform } from "stream";
 
-// 检查字符串是否包含危险内容的辅助函数
-function hasDangerousContent(data: string): boolean {
-    // 检查常见的危险模式
-    const dangerousPatterns = [
-        /<script[^>]*>.*<\/script>/i, // script 标签
-        /javascript:/i, // javascript: 协议
-        /vbscript:/i, // vbscript: 协议
-        /on\w+\s*=/i, // on事件处理器
-        /<iframe[^>]*>.*<\/iframe>/i, // iframe 标签
-        /<object[^>]*>.*<\/object>/i, // object 标签
-        /<embed[^>]*>.*<\/embed>/i, // embed 标签
-        /eval\s*\(/i, // eval 函数
-        /expression\s*\(/i, // CSS expression
-        /data:text\/html/i, // data URI html
-    ];
-
-    // 检查是否包含任何危险模式
-    return dangerousPatterns.some(pattern => pattern.test(data));
+// 检查字符串是否包含危险内容的辅助函数
+function hasDangerousContent(data: string): boolean {
+    // 检查常见的危险模式
+    const dangerousPatterns = [
+        /<script\b[^>]*>[\s\S]*?<\/script\b[^>]*>/i, // script 标签 (改进版，能匹配带属性和换行的内容)
+        /javascript:/i, // javascript: 协议
+        /vbscript:/i, // vbscript: 协议
+        /on\w+\s*=/i, // on事件处理器
+        /<iframe\b[^>]*>[\s\S]*?<\/iframe\b[^>]*>/i, // iframe 标签 (改进版)
+        /<object\b[^>]*>[\s\S]*?<\/object\b[^>]*>/i, // object 标签 (改进版)
+        /<embed\b[^>]*>[\s\S]*?<\/embed\b[^>]*>/i, // embed 标签 (改进版)
+        /eval\s*\(/i, // eval 函数
+        /expression\s*\(/i, // CSS expression
+        /data:text\/html/i, // data URI html
+    ];
+
+    // 检查是否包含任何危险模式
+    return dangerousPatterns.some(pattern => pattern.test(data));
 }
 
 // 清理字符串数据的辅助函数
