@@ -68,11 +68,9 @@ main:
               - name: build-typescript
                 script: |
                     npm run build
-              - name: docker build
+              - name: docker build and push
                 script: |
                     docker buildx build --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x \
                                          -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${VERSION} \
                                          --push .
-              - name: docker push
-                script: |
-                    echo "Docker images have been pushed with tag ${VERSION}."
+                    echo "Docker images have been built and pushed with tag ${VERSION}."
