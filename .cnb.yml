@@ -47,3 +47,30 @@ $:
               - name: 添加Github远端
                 script:
                     - git remote add  github https://github.com/xiaomizhoubaobei/MZAPI-ali.git
+main:
+    - push:
+        - docker:
+            image: node:lts
+          stages:
+              - name: extract-version
+                script: |
+                    # 使用 Node.js 脚本从 package.json 中提取版本号
+                    VERSION=$(node -e "console.log(require('./package.json').version)")
+                    echo "Extracted version: $VERSION"
+                    # 将版本号设置为环境变量
+                    echo "VERSION=$VERSION" >> $GITHUB_ENV
+              - name: setup-buildx
+                script: |
+                    docker buildx create --name mybuilder --use
+              - name: install-dependencies
+                script: |
+                    npm install
+              - name: build-typescript
+                script: |
+                    npm run build
+              - name: docker build and push
+                script: |
+                    docker buildx build --platform linux/amd64,linux/arm64,linux/ppc64le,linux/s390x \
+                                         -t ${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}:${VERSION} \
+                                         --push .
+                    echo "Docker images have been built and pushed with tag ${VERSION}."

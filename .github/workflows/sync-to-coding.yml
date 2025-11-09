@@ -13,7 +13,7 @@ permissions:
 jobs:
     sync-code:
         permissions:
-            contents: write # for Git to git push
+            contents: write
         runs-on: ubuntu-latest
         if: github.event.pull_request.merged == true ||
             github.event.sender.type != 'Bot' ||
