@@ -1,6 +1,3 @@
-# 此工作流将执行 node 依赖的干净安装，缓存/恢复它们，构建源代码并在不同版本的 node 上运行测试
-# 更多信息请参见：https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
 name: Node.js CI
 
 on:
@@ -16,13 +13,25 @@ permissions:
 
 jobs:
     build:
+        if: github.event.sender.type != 'Bot' ||
+            !contains(github.event.sender.login, 'bot') ||
+            !contains(github.event.sender.login, '[bot]') ||
+            !contains(github.event.sender.login, '(Bot)') ||
+            github.event.workflow_run.head_commit.author.login != github.event.sender.login ||
+            !contains(github.event.workflow_run.head_commit.author.login, 'bot') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '[bot]') ||
+            !contains(github.event.workflow_run.head_commit.author.login, '(Bot)') ||
+            (github.event_name != 'pull_request' || (
+            github.event.pull_request.user.login != github.event.sender.login ||
+            !contains(github.event.pull_request.user.login, 'bot') ||
+            !contains(github.event.pull_request.user.login, '[bot]') ||
+            !contains(github.event.pull_request.user.login, '(Bot)'))) ||
+            github.event.pull_request.merged == true
         runs-on: ubuntu-latest
-        if: github.event.pull_request.merged == true && github.event.sender.type != 'Bot'
 
         strategy:
             matrix:
                 node-version: [18.x, 20.x, 22.x]
-                # 查看支持的 Node.js 发布计划：https://nodejs.org/en/about/releases/
 
         steps:
             - name: Harden the runner (Audit all outbound calls)
@@ -92,8 +101,8 @@ jobs:
                   echo "Timestamp: $(date -u)" >> audit.log
 
             - name: Upload audit log
-              uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+              uses: actions/upload-artifact@v5.0.0
               with:
-                  name: nodejs-ci-audit-log
+                  name: nodejs-${{ matrix.node-version }}-audit-log-${{ github.run_id }}
                   path: audit.log
                   retention-days: 30
