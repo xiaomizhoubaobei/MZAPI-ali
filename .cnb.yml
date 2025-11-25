@@ -6,7 +6,7 @@ $:
               - vscode
               - docker
           docker:
-              image: docker.cnb.cool/xmzzuzhi/cnb-docker/node:0.0.5
+              image: docker.cnb.cool/xmzzuzhi/cnb-docker/node:0.0.1
           stages:
               - name: 授予install_gpg_keys.sh权限
                 script:
