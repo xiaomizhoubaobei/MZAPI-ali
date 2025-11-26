@@ -64,8 +64,8 @@ jobs:
                   type=raw,value=${{ steps.version.outputs.VERSION }}
                   type=raw,value=latest
                   
-                  - name: Build and push
-            - uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+            - name: Build and push
+              uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
               with:
                 context: .
                 platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x

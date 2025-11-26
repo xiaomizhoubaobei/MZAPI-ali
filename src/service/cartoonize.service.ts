@@ -89,7 +89,8 @@ export class CartoonizeService {
     ): Promise<string> {
         const urls = getApiUrls(modelType);
         const modelTypeDisplay = modelType === "3D" ? "3D" : "手绘";
-        return this.processImage(imageUrl, userId, requestId, modelTypeDisplay, urls.submit, urls.query, "cartoonizeImage");
+        const methodName = `cartoonizeImage${modelType}`;
+        return this.processImage(imageUrl, userId, requestId, modelTypeDisplay, urls.submit, urls.query, methodName);
     }
 
     /**
@@ -170,7 +171,7 @@ export class CartoonizeService {
                     },
                 );
 
-                // 记录审计日志 - 任务提交失败
+                
                 Logger.audit(
                     "CREATE",
                     "MODELSCOPE_TASK",
@@ -197,7 +198,7 @@ export class CartoonizeService {
                 },
             );
 
-            // 记录审计日志 - 任务提交成功
+            
             Logger.audit(
                 "CREATE",
                 "MODELSCOPE_TASK",
@@ -253,7 +254,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务查询失败
+                    
                     Logger.audit(
                         "READ",
                         "MODELSCOPE_TASK",
@@ -284,7 +285,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务处理成功
+                    
                     Logger.audit(
                         "UPDATE",
                         "MODELSCOPE_TASK",
@@ -316,7 +317,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务处理失败
+                    
                     Logger.audit(
                         "UPDATE",
                         "MODELSCOPE_TASK",
@@ -352,7 +353,7 @@ export class CartoonizeService {
                 },
             );
 
-            // 记录审计日志 - 任务处理超时
+            
             Logger.audit(
                 "UPDATE",
                 "MODELSCOPE_TASK",
@@ -373,20 +374,18 @@ export class CartoonizeService {
                 methodName,
                 `图像${modelType}卡通化处理过程中发生错误`,
                 {
-                    error: error.message,
-                    stack: error.stack,
-                    imageUrl: imageUrl?.substring(0, 50) + "...",
+                    error: "图像处理错误",
                     userId,
                     requestId,
                 },
             );
 
-            // 记录审计日志 - 处理过程中发生错误
+            
             Logger.audit(
                 "CREATE",
                 "MODELSCOPE_TASK",
                 "ERROR",
-                `图像${modelType}卡通化处理过程中发生错误：${error.message}`,
+                `图像${modelType}卡通化处理过程中发生错误`,
                 {
                     userId,
                     requestId,
