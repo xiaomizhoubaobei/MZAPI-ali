@@ -38,15 +38,15 @@ $:
                 script:
                     - chmod +x /workspace/install_agents.sh
                     - /workspace/install_agents.sh
-              - name: 安装gemini-cli扩展
-                script:
-                    - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
-                    - gemini extensions install https://github.com/gemini-cli-extensions/security
-                    - gemini extensions install https://github.com/gemini-cli-extensions/code-review
-                    - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
               - name: 创建开发分支
                 script:
                     - git checkout -b development
               - name: 添加Github远端
                 script:
                   - git remote add  github https://github.com/xiaomizhoubaobei/MZAPI-ali.git
+              - name: 安装gemini-cli扩展
+                script:
+                  - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
+                  - gemini extensions install https://github.com/gemini-cli-extensions/security
+                  - gemini extensions install https://github.com/gemini-cli-extensions/code-review
+                  - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library

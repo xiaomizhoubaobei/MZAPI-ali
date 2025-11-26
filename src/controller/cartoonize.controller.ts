@@ -1,12 +1,20 @@
 import { Request, Response } from "express";
-import { CartoonizeService } from "../service/cartoonize.service";
-import { CartoonizeDto } from "../dto/cartoonize.dto";
+import { CartoonizeService, CartoonizeModelType } from "../service";
+import { CartoonizeDto } from "../dto";
 import { Logger } from "../logger";
-import {IpUtil} from "../utils/ip.util";
+import {IpUtil} from "../utils";
 
+/**
+ * 卡通化控制器
+ * 处理图像卡通化相关的HTTP请求
+ */
 export class CartoonizeController {
-    private cartoonizeService: CartoonizeService;
+    private readonly cartoonizeService: CartoonizeService;
 
+    /**
+     * 构造函数 - 初始化卡通化控制器
+     * @param cartoonizeService 卡通化服务实例，可选参数，用于依赖注入
+     */
     constructor(cartoonizeService?: CartoonizeService) {
         if (cartoonizeService) {
             this.cartoonizeService = cartoonizeService;
@@ -14,16 +22,49 @@ export class CartoonizeController {
             this.cartoonizeService = new CartoonizeService();
         }
     }
+
+    /**
+     * 图像3D卡通化处理接口
+     * @param req Express请求对象
+     * @param res Express响应对象
+     */
     async cartoonizeImage(req: Request, res: Response): Promise<void> {
+        await this.processImageRequest(req, res, "cartoonizeImage", "图像卡通化", "3D");
+    }
+
+    /**
+     * 图像手绘卡通化处理接口
+     * @param req Express请求对象
+     * @param res Express响应对象
+     */
+    async cartoonizeImageHanddrawn(req: Request, res: Response): Promise<void> {
+        await this.processImageRequest(req, res, "cartoonizeImageHanddrawn", "图像手绘卡通化", "HANDDRAWN");
+    }
+
+    /**
+     * 处理图像卡通化请求的核心逻辑
+     * @param req Express请求对象
+     * @param res Express响应对象
+     * @param methodName 方法名称，用于日志记录
+     * @param processName 处理名称，用于用户提示
+     * @param modelType 模型类型
+     */
+    private async processImageRequest(
+        req: Request,
+        res: Response,
+        methodName: string,
+        processName: string,
+        modelType: CartoonizeModelType
+    ): Promise<void> {
         const ip = IpUtil.getClientIp(req);
         const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
         const userAgent = req.get("user-agent");
-        const userId = (req as any).userId || "anonymous"; // 从请求中获取用户ID，如果没有则为匿名用户
+        const userId = (req as any).userId || "anonymous";
 
         Logger.info(
             "CartoonizeController",
-            "cartoonizeImage",
-            "收到图像卡通化请求",
+            methodName,
+            `收到${processName}请求`,
             {
                 method: req.method,
                 url: req.url,
@@ -41,7 +82,7 @@ export class CartoonizeController {
             if (!imageUrl) {
                 Logger.warn(
                     "CartoonizeController",
-                    "cartoonizeImage",
+                    methodName,
                     "缺少图像URL参数",
                     {
                         ip,
@@ -50,12 +91,11 @@ export class CartoonizeController {
                     }
                 );
 
-                // 记录审计日志
                 Logger.audit(
                     "CREATE",
                     "IMAGE_TASK",
                     "FAILED",
-                    "图像卡通化请求失败：缺少图像URL参数",
+                    `${processName}请求失败：缺少图像URL参数`,
                     {
                         ip,
                         requestId,
@@ -76,22 +116,21 @@ export class CartoonizeController {
             } catch (urlError) {
                 Logger.warn(
                     "CartoonizeController",
-                    "cartoonizeImage",
+                    methodName,
                     "无效的图像URL格式",
                     {
-                        imageUrl: imageUrl?.substring(0, 50) + "...", // 只记录URL的前50个字符以保护隐私
+                        imageUrl: imageUrl?.substring(0, 50) + "...",
                         ip,
                         requestId,
                         userId,
                     }
                 );
 
-                // 记录审计日志
                 Logger.audit(
                     "CREATE",
                     "IMAGE_TASK",
                     "FAILED",
-                    "图像卡通化请求失败：无效的图像URL格式",
+                    `${processName}请求失败：无效的图像URL格式`,
                     {
                         ip,
                         requestId,
@@ -108,22 +147,21 @@ export class CartoonizeController {
 
             Logger.info(
                 "CartoonizeController",
-                "cartoonizeImage",
+                methodName,
                 "开始处理图像",
                 {
-                    imageUrl: imageUrl?.substring(0, 50) + "...", // 只记录URL的前50个字符以保护隐私
+                    imageUrl: imageUrl?.substring(0, 50) + "...",
                     ip,
                     requestId,
                     userId,
                 }
             );
 
-            // 记录审计日志 - 开始处理
             Logger.audit(
                 "CREATE",
                 "IMAGE_TASK",
                 "STARTED",
-                "开始图像卡通化处理",
+                `开始${processName}处理`,
                 {
                     ip,
                     requestId,
@@ -134,13 +172,14 @@ export class CartoonizeController {
             // 调用服务层处理
             const resultUrl = await this.cartoonizeService.cartoonizeImage(
                 imageUrl,
+                modelType,
                 userId,
                 requestId
             );
 
             Logger.info(
                 "CartoonizeController",
-                "cartoonizeImage",
+                methodName,
                 "图像处理完成，准备返回结果给客户端",
                 {
                     ip,
@@ -149,12 +188,11 @@ export class CartoonizeController {
                 }
             );
 
-            // 记录审计日志 - 处理成功
             Logger.audit(
                 "CREATE",
                 "IMAGE_TASK",
                 "SUCCESS",
-                "图像卡通化处理成功",
+                `${processName}处理成功`,
                 {
                     ip,
                     requestId,
@@ -167,13 +205,13 @@ export class CartoonizeController {
                 originalUrl: imageUrl,
                 cartoonizedUrl: resultUrl,
                 timestamp: new Date().toISOString(),
-                message: "图像卡通化处理成功",
+                message: `${processName}处理成功`,
             });
         } catch (error: any) {
             Logger.error(
                 "CartoonizeController",
-                "cartoonizeImage",
-                "图像卡通化过程中发生错误",
+                methodName,
+                `${processName}过程中发生错误`,
                 {
                     error: error.message,
                     stack: error.stack,
@@ -183,12 +221,11 @@ export class CartoonizeController {
                 }
             );
 
-            // 记录审计日志 - 处理失败
             Logger.audit(
                 "CREATE",
                 "IMAGE_TASK",
                 "FAILED",
-                `图像卡通化处理失败：${error.message}`,
+                `${processName}处理失败：${error.message}`,
                 {
                     ip,
                     requestId,
@@ -196,7 +233,6 @@ export class CartoonizeController {
                 }
             );
 
-            // 根据错误类型返回不同的状态码
             if (error instanceof TypeError && error.message.includes("URL")) {
                 res.status(400).json({
                     error: "无效的图像URL格式",
@@ -214,6 +250,11 @@ export class CartoonizeController {
         }
     }
 
+    /**
+     * 获取API信息接口
+     * @param req Express请求对象
+     * @param res Express响应对象
+     */
     getApiInfo(req: Request, res: Response): void {
         const ip = IpUtil.getClientIp(req);
         const requestId = (req.headers["x-fc-request-id"] as string) || undefined;
@@ -229,6 +270,7 @@ export class CartoonizeController {
             message: "图像卡通化API服务",
             endpoints: {
                 "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格",
+                "POST /api/modelscope/cv_unet_person-image-cartoon-handdrawn_compound-models": "将图像转换为手绘卡通风格",
             },
             description: "发送图像URL以获取卡通化版本",
             timestamp: new Date().toISOString(),
@@ -240,7 +282,6 @@ export class CartoonizeController {
             userId,
         });
 
-        // 记录审计日志
         Logger.audit("READ", "API_INFO", "SUCCESS", "获取API信息成功", {
             ip,
             requestId,
