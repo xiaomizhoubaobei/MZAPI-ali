@@ -55,7 +55,7 @@ jobs:
               with:
                 images: |
                   ${{ secrets.DOCKERHUB_USERNAME }}/iflow-cartoonize-api
-                  ghcr.io/${{ steps.repo.outputs.REPO_LC }}
+                  ghcr.io/${{ github.repository }}
                 # 关闭所有默认生成器
                 flavor: |
                   latest=false

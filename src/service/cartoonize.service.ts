@@ -1,10 +1,12 @@
 import axios from "axios";
 import { Logger } from "../logger";
+import { SecureUrlHandler } from "../utils";
 
 // ModelScope API配置
 const MODELS = {
     "3D": "iic/cv_unet_person-image-cartoon-3d_compound-models",
-    "HANDDRAWN": "iic/cv_unet_person-image-cartoon-handdrawn_compound-models"
+    "HANDDRAWN": "iic/cv_unet_person-image-cartoon-handdrawn_compound-models",
+    "SKETCH": "iic/cv_unet_person-image-cartoon-sketch_compound-models"
 } as const;
 
 /**
@@ -70,7 +72,7 @@ interface QueryResponse {
 /**
  * 卡通化模型类型定义
  */
-export type CartoonizeModelType = "3D" | "HANDDRAWN";
+export type CartoonizeModelType = "3D" | "HANDDRAWN" | "SKETCH";
 
 export class CartoonizeService {
     /**
@@ -87,10 +89,63 @@ export class CartoonizeService {
         userId: string = "anonymous",
         requestId?: string,
     ): Promise<string> {
+        // 严格验证modelType以防止日志注入
+        const validModelTypes: readonly CartoonizeModelType[] = ["3D", "HANDDRAWN", "SKETCH"] as const;
+        if (!validModelTypes.includes(modelType)) {
+            const error = new Error(`无效的模型类型: ${modelType}`);
+            error.name = "InvalidModelTypeError";
+            Logger.error("CartoonizeService", "cartoonizeImage", "无效的模型类型", {
+                modelType,
+                userId,
+                requestId,
+            });
+            throw error;
+        }
+
+        // 安全验证和清理URL
+        let safeImageUrl: string;
+        try {
+            safeImageUrl = SecureUrlHandler.sanitizeAndValidateUrl(imageUrl, requestId);
+        } catch (urlError) {
+            Logger.error("CartoonizeService", "cartoonizeImage", "URL安全验证失败", {
+                originalUrl: imageUrl?.substring(0, 50) + "...",
+                error: urlError instanceof Error ? urlError.message : "Unknown error",
+                userId,
+                requestId,
+            });
+
+            // 重新抛出URL验证错误，保持错误类型和消息
+            throw urlError;
+        }
+
         const urls = getApiUrls(modelType);
-        const modelTypeDisplay = modelType === "3D" ? "3D" : "手绘";
-        const methodName = `cartoonizeImage${modelType}`;
-        return this.processImage(imageUrl, userId, requestId, modelTypeDisplay, urls.submit, urls.query, methodName);
+        
+        // 使用映射对象提高可读性和可维护性
+        const modelConfig = {
+            "3D": {
+                display: "3D",
+                methodName: "cartoonizeImage3D"
+            },
+            "HANDDRAWN": {
+                display: "手绘",
+                methodName: "cartoonizeImageHanddrawn"
+            },
+            "SKETCH": {
+                display: "素描",
+                methodName: "cartoonizeImageSketch"
+            }
+        } as const;
+
+        // 获取模型配置，由于前面已经验证过modelType，这里直接访问是安全的
+        const config = modelConfig[modelType];
+        if (!config) {
+            // 这种情况理论上不会发生，因为上面已经验证了modelType
+            const error = new Error(`未处理的模型类型: ${modelType}`);
+            error.name = "UnhandledModelTypeError";
+            throw error;
+        }
+        
+        return this.processImage(safeImageUrl, userId, requestId, config.display, urls.submit, urls.query, config.methodName);
     }
 
     /**
