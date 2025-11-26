@@ -1,14 +1,17 @@
 # iFlow Cartoonize API
 
-这是一个图像卡通化服务API，基于Node.js和Express构建。该服务使用ModelScope的AI模型将人像图片转换为3D卡通风格。
+这是一个图像卡通化服务API，基于Node.js和Express构建。该服务使用ModelScope的AI模型将人像图片转换为多种卡通风格。
 
 ## 功能特性
 
 - 基于ModelScope AI模型的图像卡通化处理
-- 支持URL方式提交图像进行处理
+- 支持多种卡通风格：3D卡通、手绘卡通、素描卡通
+- 统一的RESTful API端点设计
+- 完善的输入验证和安全处理
 - 客户端提示（Client Hints）支持，根据设备能力优化处理效果
 - 完善的错误处理和日志记录机制
 - 审计日志功能，记录所有重要操作
+- 优雅降级和重试机制
 - 缓存控制，确保响应数据的实时性
 
 ## 项目结构
@@ -93,16 +96,38 @@ docker-compose up -d
 {
     "message": "图像卡通化API服务",
     "endpoints": {
-        "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格"
+        "POST /api/modelscope/cartoonize/:model_type": "通用图像卡通化端点，支持多种风格"
+    },
+    "modelTypes": {
+        "3D": "3D卡通风格",
+        "HANDDRAWN": "手绘卡通风格",
+        "SKETCH": "素描卡通风格"
+    },
+    "usage": {
+        "端点示例": [
+            "POST /api/modelscope/cartoonize/3D",
+            "POST /api/modelscope/cartoonize/HANDDRAWN",
+            "POST /api/modelscope/cartoonize/SKETCH"
+        ],
+        "请求体": "{\"imageUrl\": \"https://example.com/image.jpg\"}",
+        "响应示例": "{\"success\": true, \"originalUrl\": \"...\", \"cartoonizedUrl\": \"...\", \"timestamp\": \"...\"}"
     },
     "description": "发送图像URL以获取卡通化版本",
+    "version": "2.0.0",
     "timestamp": "2023-04-01T12:00:00.000Z"
 }
 ```
 
-### POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models
+### POST /api/modelscope/cartoonize/:model_type
 
-将图像转换为卡通风格。
+通用图像卡通化端点，支持多种卡通风格。
+
+**路径参数:**
+
+- `model_type` (必需): 卡通风格类型
+  - `3D` - 3D卡通风格
+  - `HANDDRAWN` - 手绘卡通风格
+  - `SKETCH` - 素描卡通风格
 
 **请求体:**
 
@@ -112,7 +137,11 @@ docker-compose up -d
 }
 ```
 
-**响应示例:**
+**请求参数说明:**
+
+- `imageUrl` (必需): 图像的URL地址，必须是有效的HTTP/HTTPS URL
+
+**成功响应示例:**
 
 ```json
 {
@@ -120,13 +149,90 @@ docker-compose up -d
     "originalUrl": "https://example.com/image.jpg",
     "cartoonizedUrl": "https://modelscope.cn/output/cartoonized.jpg",
     "timestamp": "2023-04-01T12:00:00.000Z",
-    "message": "图像卡通化处理成功",
-    "processingOptions": {
-        "quality": "medium",
-        "maxWidth": 1920,
-        "optimizeForData": false
-    }
+    "message": "图像3D卡通化处理成功"
 }
+```
+
+**降级响应示例:**
+
+```json
+{
+    "success": false,
+    "originalUrl": "https://example.com/image.jpg",
+    "cartoonizedUrl": null,
+    "fallbackUrl": "https://example.com/image.jpg",
+    "timestamp": "2023-04-01T12:00:00.000Z",
+    "message": "图像卡通化处理失败，返回原始图像",
+    "error": "外部服务错误",
+    "retryAttempts": 2
+}
+```
+
+## 使用示例
+
+### 3D卡通化
+
+```bash
+curl -X POST "http://localhost:3000/api/modelscope/cartoonize/3D" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imageUrl": "https://example.com/portrait.jpg"
+  }'
+```
+
+### 手绘卡通化
+
+```bash
+curl -X POST "http://localhost:3000/api/modelscope/cartoonize/HANDDRAWN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imageUrl": "https://example.com/portrait.jpg"
+  }'
+```
+
+### 素描卡通化
+
+```bash
+curl -X POST "http://localhost:3000/api/modelscope/cartoonize/SKETCH" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "imageUrl": "https://example.com/portrait.jpg"
+  }'
+```
+
+### JavaScript示例
+
+```javascript
+// 3D卡通化
+const response = await fetch('http://localhost:3000/api/modelscope/cartoonize/3D', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    imageUrl: 'https://example.com/portrait.jpg'
+  })
+});
+
+const result = await response.json();
+console.log(result);
+```
+
+### Python示例
+
+```python
+import requests
+import json
+
+# 手绘卡通化
+url = "http://localhost:3000/api/modelscope/cartoonize/HANDDRAWN"
+payload = {
+    "imageUrl": "https://example.com/portrait.jpg"
+}
+
+response = requests.post(url, json=payload)
+result = response.json()
+print(result)
 ```
 
 ## 错误响应
@@ -138,17 +244,27 @@ API使用标准HTTP状态码表示响应结果：
 - `404` - 请求的资源不存在
 - `408` - 请求超时
 - `500` - 服务器内部错误
+- `503` - 外部服务错误
 
 **错误响应格式:**
 
 ```json
 {
     "error": "错误描述",
-    "message": "详细错误信息",
     "code": "错误代码",
+    "message": "详细错误信息",
     "timestamp": "2023-04-01T12:00:00.000Z"
 }
 ```
+
+**常见错误代码:**
+
+- `MISSING_IMAGE_URL` - 缺少imageUrl参数
+- `INVALID_URL_FORMAT` - URL格式无效
+- `INVALID_MODEL_TYPE` - 无效的模型类型
+- `UNSUPPORTED_URL_PROTOCOL` - 不支持的URL协议
+- `EXTERNAL_SERVICE_ERROR` - 外部服务错误
+- `REQUEST_TIMEOUT` - 请求超时
 
 ## 环境变量
 

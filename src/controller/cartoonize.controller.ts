@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { CartoonizeService, CartoonizeModelType } from "../service";
 import { CartoonizeDto } from "../dto";
 import { Logger } from "../logger";
-import {IpUtil} from "../utils";
+import { IpUtil } from "../utils";
 
 /**
  * 卡通化控制器
@@ -24,30 +24,25 @@ export class CartoonizeController {
     }
 
     /**
-     * 图像3D卡通化处理接口
+     * 通用图像卡通化处理接口
      * @param req Express请求对象
      * @param res Express响应对象
      */
     async cartoonizeImage(req: Request, res: Response): Promise<void> {
-        await this.processImageRequest(req, res, "cartoonizeImage", "图像卡通化", "3D");
-    }
+        // 使用中间件验证过的模型类型
+        const modelType = (req as any).validatedModelType as CartoonizeModelType;
+        
+        // 根据模型类型设置显示名称
+        const modelTypeNames = {
+            "3D": "3D卡通化",
+            "HANDDRAWN": "手绘卡通化",
+            "SKETCH": "素描卡通化"
+        };
 
-    /**
-     * 图像手绘卡通化处理接口
-     * @param req Express请求对象
-     * @param res Express响应对象
-     */
-    async cartoonizeImageHanddrawn(req: Request, res: Response): Promise<void> {
-        await this.processImageRequest(req, res, "cartoonizeImageHanddrawn", "图像手绘卡通化", "HANDDRAWN");
-    }
-
-    /**
-     * 图像素描卡通化处理接口
-     * @param req Express请求对象
-     * @param res Express响应对象
-     */
-    async cartoonizeImageSketch(req: Request, res: Response): Promise<void> {
-        await this.processImageRequest(req, res, "cartoonizeImageSketch", "图像素描卡通化", "SKETCH");
+        const processName = `图像${modelTypeNames[modelType]}`;
+        const methodName = `cartoonizeImage${modelType}`;
+        
+        await this.processImageRequest(req, res, methodName, processName, modelType);
     }
 
     /**
@@ -85,14 +80,15 @@ export class CartoonizeController {
         );
 
         try {
-            const { imageUrl } = req.body as CartoonizeDto;
+            // 使用验证中间件验证过的imageUrl
+            const imageUrl = (req as any).validatedImageUrl || (req.body as CartoonizeDto).imageUrl;
 
-            // 验证输入
+            // 双重验证：如果验证中间件没有提供imageUrl，则进行基本验证
             if (!imageUrl) {
                 Logger.warn(
                     "CartoonizeController",
                     methodName,
-                    "缺少图像URL参数",
+                    "缺少图像URL参数（验证中间件失效）",
                     {
                         ip,
                         requestId,
@@ -115,41 +111,6 @@ export class CartoonizeController {
                 res.status(400).json({
                     error: "图像URL是必需的",
                     code: "MISSING_IMAGE_URL",
-                });
-                return;
-            }
-
-            // 简单验证URL格式
-            try {
-                new URL(imageUrl);
-            } catch (urlError) {
-                Logger.warn(
-                    "CartoonizeController",
-                    methodName,
-                    "无效的图像URL格式",
-                    {
-                        imageUrl: imageUrl?.substring(0, 50) + "...",
-                        ip,
-                        requestId,
-                        userId,
-                    }
-                );
-
-                Logger.audit(
-                    "CREATE",
-                    "IMAGE_TASK",
-                    "FAILED",
-                    `${processName}请求失败：无效的图像URL格式`,
-                    {
-                        ip,
-                        requestId,
-                        userId,
-                    }
-                );
-
-                res.status(400).json({
-                    error: "无效的图像URL格式",
-                    code: "INVALID_URL_FORMAT",
                 });
                 return;
             }
@@ -178,13 +139,84 @@ export class CartoonizeController {
                 }
             );
 
-            // 调用服务层处理
-            const resultUrl = await this.cartoonizeService.cartoonizeImage(
-                imageUrl,
-                modelType,
-                userId,
-                requestId
-            );
+            // 调用服务层处理，实现优雅降级
+            let resultUrl: string;
+            let retryCount = 0;
+            const maxRetries = 2; // 最多重试2次
+
+            while (retryCount <= maxRetries) {
+                try {
+                    resultUrl = await this.cartoonizeService.cartoonizeImage(
+                        imageUrl,
+                        modelType,
+                        userId,
+                        requestId
+                    );
+                    break; // 成功则跳出重试循环
+                } catch (serviceError: any) {
+                    retryCount++;
+                    
+                    Logger.warn(
+                        "CartoonizeController",
+                        methodName,
+                        `服务层处理失败，尝试第${retryCount}次重试`,
+                        {
+                            error: serviceError.message,
+                            retryCount,
+                            maxRetries,
+                            imageUrl: imageUrl?.substring(0, 50) + "...",
+                            ip,
+                            requestId,
+                            userId,
+                        }
+                    );
+
+                    if (retryCount > maxRetries) {
+                        // 所有重试都失败，实现优雅降级
+                        Logger.error(
+                            "CartoonizeController",
+                            methodName,
+                            `${processName}处理失败，所有重试都已用尽`,
+                            {
+                                error: serviceError.message,
+                                totalRetries: maxRetries,
+                                imageUrl: imageUrl?.substring(0, 50) + "...",
+                                ip,
+                                requestId,
+                                userId,
+                            }
+                        );
+
+                        Logger.audit(
+                            "CREATE",
+                            "IMAGE_TASK",
+                            "FAILED",
+                            `${processName}处理失败：所有重试都已用尽`,
+                            {
+                                ip,
+                                requestId,
+                                userId,
+                            }
+                        );
+
+                        // 优雅降级：返回原始URL和错误信息
+                        res.status(200).json({
+                            success: false,
+                            originalUrl: imageUrl,
+                            cartoonizedUrl: null,
+                            fallbackUrl: imageUrl, // 降级方案：返回原始URL
+                            timestamp: new Date().toISOString(),
+                            message: `${processName}处理失败，返回原始图像`,
+                            error: serviceError.message,
+                            retryAttempts: maxRetries,
+                        });
+                        return;
+                    }
+
+                    // 等待一段时间后重试
+                    await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+                }
+            }
 
             Logger.info(
                 "CartoonizeController",
@@ -278,11 +310,24 @@ export class CartoonizeController {
         res.status(200).json({
             message: "图像卡通化API服务",
             endpoints: {
-                "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格",
-                "POST /api/modelscope/cv_unet_person-image-cartoon-handdrawn_compound-models": "将图像转换为手绘卡通风格",
-                "POST /api/modelscope/cv_unet_person-image-cartoon-sketch_compound-models": "将图像转换为素描卡通风格",
+                "POST /api/modelscope/cartoonize/:model_type": "通用图像卡通化端点，支持多种风格"
+            },
+            modelTypes: {
+                "3D": "3D卡通风格",
+                "HANDDRAWN": "手绘卡通风格",
+                "SKETCH": "素描卡通风格"
+            },
+            usage: {
+                "端点示例": [
+                    "POST /api/modelscope/cartoonize/3D",
+                    "POST /api/modelscope/cartoonize/HANDDRAWN",
+                    "POST /api/modelscope/cartoonize/SKETCH"
+                ],
+                "请求体": '{"imageUrl": "https://example.com/image.jpg"}',
+                "响应示例": '{"success": true, "originalUrl": "...", "cartoonizedUrl": "...", "timestamp": "..."}'
             },
             description: "发送图像URL以获取卡通化版本",
+            version: "2.0.0",
             timestamp: new Date().toISOString(),
         });
 

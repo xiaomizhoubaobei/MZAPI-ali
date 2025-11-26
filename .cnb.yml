@@ -17,8 +17,8 @@ $:
                     - echo "iflow安装完成"
               - name: 安装sudo更新APT源
                 script:
-                    - apt-get update
-                    - apt-get install -y sudo lsof net-tools
+                    - sudo apt-get update
+                    - sudo apt-get install -y lsof net-tools
                     - echo "依赖完成"
               - name: 安装Git LFS
                 script:

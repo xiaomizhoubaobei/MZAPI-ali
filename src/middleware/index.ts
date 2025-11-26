@@ -9,3 +9,5 @@ export { notFoundMiddleware } from './not.found.middleware';
 export { requestLoggerMiddleware } from './request.logger.middleware';
 export { serverTimingInterceptor } from './server.timing.interceptor';
 export { HttpMethodRestrictMiddleware } from './http.method.restrict.middleware';
+export { validateImageUrl, errorHandler } from './validation.middleware';
+export { validateModelType } from './model-type.validation.middleware';

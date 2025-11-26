@@ -68,7 +68,22 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            
+            // 对敏感信息操作进行审计日志记录
+            if (this.isSensitiveOperation(module, method, data)) {
+                this.audit(
+                    "READ",
+                    "SENSITIVE_DATA",
+                    "SUCCESS",
+                    `访问敏感信息: ${message}`,
+                    {
+                        module,
+                        method,
+                        userId,
+                        requestId,
+                        ip,
+                    }
+                );
+            }
         }
     }
     warn(
@@ -107,7 +122,22 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            
+            // 对潜在安全风险操作进行审计日志记录
+            if (this.isSecurityRelevantOperation(module, method, data)) {
+                this.audit(
+                    "SECURITY_WARNING",
+                    "SYSTEM_SECURITY",
+                    "WARNING",
+                    `安全相关警告: ${message}`,
+                    {
+                        module,
+                        method,
+                        userId,
+                        requestId,
+                        ip,
+                    }
+                );
+            }
         }
     }
 
@@ -153,7 +183,22 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            
+            // 对错误和安全相关操作进行审计日志记录
+            if (this.isCriticalError(module, method, data)) {
+                this.audit(
+                    "SYSTEM_ERROR",
+                    "APPLICATION_SECURITY",
+                    "FAILED",
+                    `关键错误: ${message}`,
+                    {
+                        module,
+                        method,
+                        userId,
+                        requestId,
+                        ip,
+                    }
+                );
+            }
         }
     }
 
@@ -199,6 +244,78 @@ export class LogService {
                 ...(ip && { ip }),
             });
         }
+    }
+
+    /**
+     * 判断是否为敏感信息操作
+     * @param module 模块名称
+     * @param method 方法名称
+     * @param data 数据内容
+     * @returns 是否为敏感操作
+     */
+    private isSensitiveOperation(module: string, method: string, data?: any): boolean {
+        const sensitiveModules = ["UserController", "AuthService", "AdminController"];
+        const sensitiveMethods = ["login", "register", "updateProfile", "changePassword"];
+        const sensitiveKeywords = ["password", "token", "secret", "key", "credential"];
+        
+        if (sensitiveModules.includes(module) || sensitiveMethods.includes(method)) {
+            return true;
+        }
+        
+        if (data && typeof data === 'object') {
+            const dataStr = JSON.stringify(data).toLowerCase();
+            return sensitiveKeywords.some(keyword => dataStr.includes(keyword));
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否为安全相关操作
+     * @param module 模块名称
+     * @param method 方法名称
+     * @param data 数据内容
+     * @returns 是否为安全相关操作
+     */
+    private isSecurityRelevantOperation(module: string, method: string, data?: any): boolean {
+        const securityModules = ["SecurityService", "AuthController", "Middleware"];
+        const securityMethods = ["authenticate", "authorize", "validate", "sanitize"];
+        const securityKeywords = ["unauthorized", "forbidden", "invalid", "suspicious"];
+        
+        if (securityModules.includes(module) || securityMethods.includes(method)) {
+            return true;
+        }
+        
+        if (data && typeof data === 'object') {
+            const dataStr = JSON.stringify(data).toLowerCase();
+            return securityKeywords.some(keyword => dataStr.includes(keyword));
+        }
+        
+        return false;
+    }
+
+    /**
+     * 判断是否为关键错误
+     * @param module 模块名称
+     * @param method 方法名称
+     * @param data 数据内容
+     * @returns 是否为关键错误
+     */
+    private isCriticalError(module: string, method: string, data?: any): boolean {
+        const criticalModules = ["DatabaseService", "PaymentService", "SecurityService"];
+        const criticalMethods = ["processPayment", "deleteData", "systemShutdown"];
+        const criticalKeywords = ["crash", "fatal", "critical", "exception", "breach"];
+        
+        if (criticalModules.includes(module) || criticalMethods.includes(method)) {
+            return true;
+        }
+        
+        if (data && typeof data === 'object') {
+            const dataStr = JSON.stringify(data).toLowerCase();
+            return criticalKeywords.some(keyword => dataStr.includes(keyword));
+        }
+        
+        return false;
     }
 
     /**
