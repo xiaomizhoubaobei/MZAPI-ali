@@ -42,6 +42,15 @@ export class CartoonizeController {
     }
 
     /**
+     * 图像素描卡通化处理接口
+     * @param req Express请求对象
+     * @param res Express响应对象
+     */
+    async cartoonizeImageSketch(req: Request, res: Response): Promise<void> {
+        await this.processImageRequest(req, res, "cartoonizeImageSketch", "图像素描卡通化", "SKETCH");
+    }
+
+    /**
      * 处理图像卡通化请求的核心逻辑
      * @param req Express请求对象
      * @param res Express响应对象
@@ -271,6 +280,7 @@ export class CartoonizeController {
             endpoints: {
                 "POST /api/modelscope/cv_unet_person-image-cartoon-3d_compound-models": "将图像转换为卡通风格",
                 "POST /api/modelscope/cv_unet_person-image-cartoon-handdrawn_compound-models": "将图像转换为手绘卡通风格",
+                "POST /api/modelscope/cv_unet_person-image-cartoon-sketch_compound-models": "将图像转换为素描卡通风格",
             },
             description: "发送图像URL以获取卡通化版本",
             timestamp: new Date().toISOString(),

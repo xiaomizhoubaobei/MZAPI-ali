@@ -68,17 +68,7 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            // 同时记录到审计日志（仅记录重要操作）
-            if (module !== "Main" && method !== "Request") {
-                this.auditLogger.info(message, {
-                    module,
-                    method,
-                    ...(data && { data }),
-                    ...(userId && { userId }),
-                    ...(requestId && { requestId }),
-                    ...(ip && { ip }),
-                });
-            }
+            
         }
     }
     warn(
@@ -117,15 +107,7 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            // 同时记录到审计日志
-            this.auditLogger.warn(message, {
-                module,
-                method,
-                ...(data && { data }),
-                ...(userId && { userId }),
-                ...(requestId && { requestId }),
-                ...(ip && { ip }),
-            });
+            
         }
     }
 
@@ -171,15 +153,7 @@ export class LogService {
                 ...(ip && { ip }),
             });
 
-            // 同时记录到审计日志
-            this.auditLogger.error(message, {
-                module,
-                method,
-                ...(data && { data }),
-                ...(userId && { userId }),
-                ...(requestId && { requestId }),
-                ...(ip && { ip }),
-            });
+            
         }
     }
 

@@ -4,7 +4,8 @@ import { Logger } from "../logger";
 // ModelScope API配置
 const MODELS = {
     "3D": "iic/cv_unet_person-image-cartoon-3d_compound-models",
-    "HANDDRAWN": "iic/cv_unet_person-image-cartoon-handdrawn_compound-models"
+    "HANDDRAWN": "iic/cv_unet_person-image-cartoon-handdrawn_compound-models",
+    "SKETCH": "iic/cv_unet_person-image-cartoon-sketch_compound-models"
 } as const;
 
 /**
@@ -70,7 +71,7 @@ interface QueryResponse {
 /**
  * 卡通化模型类型定义
  */
-export type CartoonizeModelType = "3D" | "HANDDRAWN";
+export type CartoonizeModelType = "3D" | "HANDDRAWN" | "SKETCH";
 
 export class CartoonizeService {
     /**
@@ -88,7 +89,7 @@ export class CartoonizeService {
         requestId?: string,
     ): Promise<string> {
         const urls = getApiUrls(modelType);
-        const modelTypeDisplay = modelType === "3D" ? "3D" : "手绘";
+        const modelTypeDisplay = modelType === "3D" ? "3D" : modelType === "HANDDRAWN" ? "手绘" : "素描";
         const methodName = `cartoonizeImage${modelType}`;
         return this.processImage(imageUrl, userId, requestId, modelTypeDisplay, urls.submit, urls.query, methodName);
     }

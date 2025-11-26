@@ -30,4 +30,12 @@ router.post("/api/modelscope/cv_unet_person-image-cartoon-handdrawn_compound-mod
     await cartoonizeController.cartoonizeImageHanddrawn(req, res);
 });
 
+/**
+ * 图像素描卡通化API路由
+ * 接收图像URL，返回素描卡通风格的图像
+ */
+router.post("/api/modelscope/cv_unet_person-image-cartoon-sketch_compound-models", async (req: Request, res: Response) => {
+    await cartoonizeController.cartoonizeImageSketch(req, res);
+});
+
 export default router;
