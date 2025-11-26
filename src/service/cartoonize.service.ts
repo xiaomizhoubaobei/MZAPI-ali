@@ -1,10 +1,21 @@
 import axios from "axios";
 import { Logger } from "../logger";
 
-// 直接连接到ModelScope API
-const MODEL = "iic/cv_unet_person-image-cartoon-3d_compound-models";
-const SUBMIT_URL = `https://modelscope.cn/api/v1/models/${MODEL}/widgets/submit`;
-const QUERY_URL = `https://modelscope.cn/api/v1/models/${MODEL}/widgets/query`;
+// ModelScope API配置
+const MODELS = {
+    "3D": "iic/cv_unet_person-image-cartoon-3d_compound-models",
+    "HANDDRAWN": "iic/cv_unet_person-image-cartoon-handdrawn_compound-models"
+} as const;
+
+/**
+ * 获取ModelScope API的提交和查询URL
+ * @param modelKey 模型键名
+ * @returns 包含提交和查询URL的对象
+ */
+const getApiUrls = (modelKey: keyof typeof MODELS) => ({
+    submit: `https://modelscope.cn/api/v1/models/${MODELS[modelKey]}/widgets/submit`,
+    query: `https://modelscope.cn/api/v1/models/${MODELS[modelKey]}/widgets/query`
+});
 
 const headers = {
     "Content-Type": "application/json",
@@ -13,6 +24,9 @@ const headers = {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 };
 
+/**
+ * ModelScope API请求载荷接口
+ */
 interface Payload {
     task: string;
     inputs: string[];
@@ -23,6 +37,9 @@ interface Payload {
     };
 }
 
+/**
+ * ModelScope任务提交响应接口
+ */
 interface SubmitResponse {
     Code: number;
     Data: {
@@ -33,6 +50,9 @@ interface SubmitResponse {
     Success: boolean;
 }
 
+/**
+ * ModelScope任务查询响应接口
+ */
 interface QueryResponse {
     Code: number;
     Data: {
@@ -47,16 +67,56 @@ interface QueryResponse {
     Success: boolean;
 }
 
+/**
+ * 卡通化模型类型定义
+ */
+export type CartoonizeModelType = "3D" | "HANDDRAWN";
+
 export class CartoonizeService {
+    /**
+     * 图像卡通化处理
+     * @param imageUrl 图像URL地址
+     * @param modelType 卡通化模型类型（"3D"或"HANDDRAWN"）
+     * @param userId 用户ID，默认为"anonymous"
+     * @param requestId 请求ID，用于日志追踪
+     * @returns 处理后的图像URL
+     */
     async cartoonizeImage(
         imageUrl: string,
+        modelType: CartoonizeModelType,
         userId: string = "anonymous",
         requestId?: string,
     ): Promise<string> {
+        const urls = getApiUrls(modelType);
+        const modelTypeDisplay = modelType === "3D" ? "3D" : "手绘";
+        const methodName = `cartoonizeImage${modelType}`;
+        return this.processImage(imageUrl, userId, requestId, modelTypeDisplay, urls.submit, urls.query, methodName);
+    }
+
+    /**
+     * 处理图像卡通化的核心逻辑
+     * @param imageUrl 图像URL地址
+     * @param userId 用户ID
+     * @param requestId 请求ID
+     * @param modelType 模型类型显示名称
+     * @param submitUrl ModelScope任务提交URL
+     * @param queryUrl ModelScope任务查询URL
+     * @param methodName 调用方法名，用于日志记录
+     * @returns 处理后的图像URL
+     */
+    private async processImage(
+        imageUrl: string,
+        userId: string,
+        requestId: string | undefined,
+        modelType: string,
+        submitUrl: string,
+        queryUrl: string,
+        methodName: string,
+    ): Promise<string> {
         Logger.info(
             "CartoonizeService",
-            "cartoonizeImage",
-            "开始处理图像卡通化请求",
+            methodName,
+            `开始处理图像${modelType}卡通化请求`,
             {
                 imageUrl: imageUrl?.substring(0, 50) + "...", // 只记录URL的前50个字符以保护隐私
                 userId,
@@ -78,8 +138,8 @@ export class CartoonizeService {
         try {
             Logger.debug(
                 "CartoonizeService",
-                "cartoonizeImage",
-                "提交卡通化任务到ModelScope API",
+                methodName,
+                `提交${modelType}卡通化任务到ModelScope API`,
                 {
                     payloadSize: JSON.stringify(payload).length,
                     userId,
@@ -88,7 +148,7 @@ export class CartoonizeService {
             );
 
             const submitResponse = await axios.post<SubmitResponse>(
-                SUBMIT_URL,
+                submitUrl,
                 payload,
                 { headers },
             );
@@ -101,7 +161,7 @@ export class CartoonizeService {
                 error.name = "SubmitTaskError";
                 Logger.error(
                     "CartoonizeService",
-                    "cartoonizeImage",
+                    methodName,
                     "任务提交失败",
                     {
                         error: error.message,
@@ -111,7 +171,7 @@ export class CartoonizeService {
                     },
                 );
 
-                // 记录审计日志 - 任务提交失败
+                
                 Logger.audit(
                     "CREATE",
                     "MODELSCOPE_TASK",
@@ -129,7 +189,7 @@ export class CartoonizeService {
             const taskId = submitResponse.data.Data.id;
             Logger.info(
                 "CartoonizeService",
-                "cartoonizeImage",
+                methodName,
                 "任务提交成功",
                 {
                     taskId,
@@ -138,7 +198,7 @@ export class CartoonizeService {
                 },
             );
 
-            // 记录审计日志 - 任务提交成功
+            
             Logger.audit(
                 "CREATE",
                 "MODELSCOPE_TASK",
@@ -158,7 +218,7 @@ export class CartoonizeService {
             while (retryCount < maxRetries) {
                 Logger.debug(
                     "CartoonizeService",
-                    "cartoonizeImage",
+                    methodName,
                     "轮询任务状态",
                     {
                         taskId,
@@ -170,7 +230,7 @@ export class CartoonizeService {
                 );
 
                 const queryResponse = await axios.post<QueryResponse>(
-                    QUERY_URL,
+                    queryUrl,
                     { id: taskId },
                     { headers },
                 );
@@ -183,7 +243,7 @@ export class CartoonizeService {
                     error.name = "QueryTaskError";
                     Logger.error(
                         "CartoonizeService",
-                        "cartoonizeImage",
+                        methodName,
                         "任务查询失败",
                         {
                             error: error.message,
@@ -194,7 +254,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务查询失败
+                    
                     Logger.audit(
                         "READ",
                         "MODELSCOPE_TASK",
@@ -216,7 +276,7 @@ export class CartoonizeService {
                 if (data.status === 2) {
                     Logger.info(
                         "CartoonizeService",
-                        "cartoonizeImage",
+                        methodName,
                         "图像处理成功完成",
                         {
                             taskId,
@@ -225,7 +285,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务处理成功
+                    
                     Logger.audit(
                         "UPDATE",
                         "MODELSCOPE_TASK",
@@ -247,7 +307,7 @@ export class CartoonizeService {
                     error.name = "ProcessTaskError";
                     Logger.error(
                         "CartoonizeService",
-                        "cartoonizeImage",
+                        methodName,
                         "图像处理任务失败",
                         {
                             error: error.message,
@@ -257,7 +317,7 @@ export class CartoonizeService {
                         },
                     );
 
-                    // 记录审计日志 - 任务处理失败
+                    
                     Logger.audit(
                         "UPDATE",
                         "MODELSCOPE_TASK",
@@ -283,7 +343,7 @@ export class CartoonizeService {
             error.name = "TaskTimeoutError";
             Logger.error(
                 "CartoonizeService",
-                "cartoonizeImage",
+                methodName,
                 "图像处理超时",
                 {
                     taskId,
@@ -293,7 +353,7 @@ export class CartoonizeService {
                 },
             );
 
-            // 记录审计日志 - 任务处理超时
+            
             Logger.audit(
                 "UPDATE",
                 "MODELSCOPE_TASK",
@@ -311,23 +371,21 @@ export class CartoonizeService {
         } catch (error: any) {
             Logger.error(
                 "CartoonizeService",
-                "cartoonizeImage",
-                "图像卡通化处理过程中发生错误",
+                methodName,
+                `图像${modelType}卡通化处理过程中发生错误`,
                 {
-                    error: error.message,
-                    stack: error.stack,
-                    imageUrl: imageUrl?.substring(0, 50) + "...",
+                    error: "图像处理错误",
                     userId,
                     requestId,
                 },
             );
 
-            // 记录审计日志 - 处理过程中发生错误
+            
             Logger.audit(
                 "CREATE",
                 "MODELSCOPE_TASK",
                 "ERROR",
-                `图像卡通化处理过程中发生错误：${error.message}`,
+                `图像${modelType}卡通化处理过程中发生错误`,
                 {
                     userId,
                     requestId,

@@ -1,0 +1,1 @@
+export {CartoonizeDto} from './cartoonize.dto'

@@ -1,7 +1,10 @@
 import * as winston from "winston";
 import { logLevels, logFormat } from "../config/log.config";
 
-// 创建应用日志记录器实例
+/**
+ * 应用日志记录器实例
+ * 配置了日志级别、格式和控制台输出
+ */
 export const appLogger = winston.createLogger({
     levels: logLevels,
     level: "debug",
@@ -17,7 +20,11 @@ export const appLogger = winston.createLogger({
     ],
 });
 
-// 用于在应用不同部分获取特定的记录器实例
+/**
+ * 获取带有上下文信息的日志记录器实例
+ * @param context 上下文标识，用于区分不同模块的日志
+ * @returns 带有上下文信息的子日志记录器实例
+ */
 export const getAppLogger = (context: string) => {
     return appLogger.child({ context });
 };

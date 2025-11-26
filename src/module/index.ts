@@ -1,0 +1,1 @@
+export {CartoonizeModule}  from './cartoonize.module'

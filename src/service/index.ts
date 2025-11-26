@@ -1,0 +1,1 @@
+export {CartoonizeService, CartoonizeModelType} from './cartoonize.service'

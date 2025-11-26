@@ -49,27 +49,28 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Extract metadata for Docker
+            - name: Docker meta
               id: meta
               uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893 # v5.9.0
               with:
-                  images: |
-                      ${{ secrets.DOCKERHUB_USERNAME }}/iflow-cartoonize-api
-                      ghcr.io/${{ github.repository }}
-                  tags: |
-                      type=raw,value={{version}}
-                      type=raw,value=${{ steps.version.outputs.VERSION }}
-
-            - name: Build and push Docker image
+                images: |
+                  ${{ secrets.DOCKERHUB_USERNAME }}/iflow-cartoonize-api
+                  ghcr.io/${{ steps.repo.outputs.REPO_LC }}
+                # 关闭所有默认生成器
+                flavor: |
+                  latest=false
+                # 只保留两条我们想要的
+                tags: |
+                  type=raw,value=${{ steps.version.outputs.VERSION }}
+                  type=raw,value=latest
+                  
+            - name: Build and push
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
               with:
-                  context: .
-                  platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x
-                  push: true
-                  tags: |
-                    ${{ steps.meta.outputs.tags }}
-                    ${{ secrets.DOCKERHUB_USERNAME }}/iflow-cartoonize-api:latest
-                    ghcr.io/${{ github.repository }}:latest
-                  labels: ${{ steps.meta.outputs.labels }}
-                  cache-from: type=gha
-                  cache-to: type=gha,mode=max
+                context: .
+                platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x
+                push: true
+                tags: ${{ steps.meta.outputs.tags }}
+                labels: ${{ steps.meta.outputs.labels }}
+                cache-from: type=gha
+                cache-to: type=gha,mode=max

@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { Logger } from "../logger";
-import { IpUtil } from "../utils/ip.util";
+import { IpUtil } from "../utils";
 
 /**
  * 错误日志服务类

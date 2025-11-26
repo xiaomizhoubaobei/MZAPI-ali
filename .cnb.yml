@@ -11,11 +11,6 @@ $:
               - name: 授予install_gpg_keys.sh权限
                 script:
                     - chmod +x /workspace/install_gpg_keys.sh
-              - name: 安装sudo更新APT源
-                script:
-                    - apt-get update
-                    - apt-get install -y sudo lsof net-tools
-                    - echo "依赖完成"
               - name: 安装iflow
                 script:
                     - npm i -g @iflow-ai/iflow-cli@latest
@@ -25,10 +20,6 @@ $:
                     - sudo apt-get install -y git-lfs
                     - git lfs install
                     - echo "Git LFS安装完成"
-              - name: 安装Gemini
-                script:
-                    - npm install -g @google/gemini-cli
-                    - echo "Gemini安装完成"
               - name: 下载并替换settings.json
                 script:
                     - mkdir -p /root/.iflow
@@ -38,12 +29,6 @@ $:
                 script:
                     - chmod +x /workspace/install_agents.sh
                     - /workspace/install_agents.sh
-              - name: 安装gemini-cli扩展
-                script:
-                    - gemini extensions install https://github.com/gemini-cli-extensions/nanobanana
-                    - gemini extensions install https://github.com/gemini-cli-extensions/security
-                    - gemini extensions install https://github.com/gemini-cli-extensions/code-review
-                    - gemini extensions install https://github.com/harish-garg/gemini-cli-prompt-library
               - name: 创建开发分支
                 script:
                     - git checkout -b development
