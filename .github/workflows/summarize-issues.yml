@@ -1,0 +1,39 @@
+name: 新issue摘要
+
+on:
+  issues:
+    types: [opened]  # 监听新issue打开事件
+
+jobs:
+  summary:
+    runs-on: ubuntu-latest  # 在最新版Ubuntu上运行
+    permissions:
+      issues: write  # 写入issue权限
+      models: read   # 读取模型权限
+      contents: read # 读取内容权限
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        with:
+          egress-policy: audit
+
+      - name: 检出仓库
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+
+      - name: 运行AI推理
+        id: inference
+        uses: actions/ai-inference@b8b2afb8390ee6839b494a404766bef6493c7d # v1.2.8
+        with:
+          prompt: |  # 设置AI提示词
+            用一段话总结以下GitHub issue:
+            标题: ${{ github.event.issue.title }}
+            内容: ${{ github.event.issue.body }}
+
+      - name: 添加AI摘要评论
+        run: |  # 使用gh命令添加评论
+          gh issue comment $ISSUE_NUMBER --body '${{ steps.inference.outputs.response }}'
+        env:
+          GH_TOKEN: ${{ secrets.TOKEN }}  # GitHub token
+          ISSUE_NUMBER: ${{ github.event.issue.number }}  # issue编号
+          RESPONSE: ${{ steps.inference.outputs.response }}  # AI响应内容
