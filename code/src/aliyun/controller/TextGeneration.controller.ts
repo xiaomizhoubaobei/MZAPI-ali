@@ -65,11 +65,11 @@ export class TextGenerationController {
         this.logger.debug(`流式文本生成完成，模型: ${textGenerationDto.model}`);
         return;
       } else {
-        // 非流式输出
+        // 非流式输出 - 使用 res.json() 手动发送响应
         const result =
           await this.textGenerationService.textGeneration(textGenerationDto);
         this.logger.debug(`文本生成完成，模型: ${textGenerationDto.model}`);
-        return result;
+        res.json(result);
       }
     } catch (error) {
       this.logger.error(`文本生成失败: ${error.message}`, error.stack);

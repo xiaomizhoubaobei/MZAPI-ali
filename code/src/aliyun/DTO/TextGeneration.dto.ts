@@ -4,6 +4,8 @@ import {
   IsArray,
   ValidateNested,
   IsOptional,
+  IsUrl,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -14,6 +16,55 @@ export enum MessageRole {
   SYSTEM = 'system',
   USER = 'user',
   ASSISTANT = 'assistant',
+}
+
+/**
+ * 内容类型枚举
+ */
+export enum ContentType {
+  TEXT = 'text',
+  IMAGE_URL = 'image_url',
+}
+
+/**
+ * 图片URL内容项
+ */
+export class ImageUrlContent {
+  /**
+   * 图片URL
+   */
+  @IsString()
+  @IsUrl()
+  @IsNotEmpty()
+  url: string;
+}
+
+/**
+ * 内容项
+ */
+export class ContentItem {
+  /**
+   * 内容类型
+   */
+  @IsString()
+  @IsIn([ContentType.TEXT, ContentType.IMAGE_URL])
+  @IsNotEmpty()
+  type: ContentType;
+
+  /**
+   * 文本内容（当 type 为 text 时）
+   */
+  @IsString()
+  @IsOptional()
+  text?: string;
+
+  /**
+   * 图片URL内容（当 type 为 image_url 时）
+   */
+  @ValidateNested()
+  @IsOptional()
+  @Type(() => ImageUrlContent)
+  image_url?: ImageUrlContent;
 }
 
 /**
@@ -29,10 +80,10 @@ export class MessageDto {
 
   /**
    * 消息内容
+   * @description 支持纯文本字符串或多模态内容数组（文本+图片）
    */
-  @IsString()
   @IsNotEmpty()
-  content: string;
+  content: string | ContentItem[];
 
   /**
    * 是否为部分补全
