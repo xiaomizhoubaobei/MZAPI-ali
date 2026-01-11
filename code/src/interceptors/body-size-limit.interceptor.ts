@@ -42,8 +42,15 @@ export class BodySizeLimitInterceptor implements NestInterceptor {
     // 继续处理请求
     return next.handle().pipe(
       map((data) => {
-        // 在响应头中添加最大请求体大小信息
-        response.setHeader('X-Max-Body-Size', this.formatBytes(this.maxBodySize));
+        // 跳过流式响应
+        if (data === undefined && response.headersSent) {
+          return data;
+        }
+
+        // 在响应头中添加最大请求体大小信息（仅在响应未发送时）
+        if (!response.headersSent) {
+          response.setHeader('X-Max-Body-Size', this.formatBytes(this.maxBodySize));
+        }
         return data;
       }),
     );

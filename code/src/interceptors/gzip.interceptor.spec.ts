@@ -13,10 +13,14 @@ describe('GzipInterceptor', () => {
     interceptor = module.get<GzipInterceptor>(GzipInterceptor);
   });
 
-  const createGzipTestContext = (acceptEncoding: string | string[] | {}) => {
+  const createGzipTestContext = (acceptEncoding: string | string[] | null | undefined) => {
     const setHeaderMock = jest.fn();
+    const headers: any = {};
+    if (acceptEncoding !== null && acceptEncoding !== undefined) {
+      headers['accept-encoding'] = acceptEncoding;
+    }
     const requestMock = {
-      headers: acceptEncoding ? { 'accept-encoding': acceptEncoding } : {},
+      headers,
     };
     const responseMock = {
       setHeader: setHeaderMock,
@@ -77,7 +81,7 @@ describe('GzipInterceptor', () => {
   });
 
   it('should not compress when accept-encoding header is missing', async () => {
-    const { context, setHeaderMock } = createGzipTestContext({});
+    const { context, setHeaderMock } = createGzipTestContext(null);
     const testData = { data: 'test' };
     const next = TestInterceptorUtils.createMockNext(testData);
 

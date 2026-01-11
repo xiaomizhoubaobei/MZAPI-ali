@@ -4,16 +4,36 @@ on:
   pull_request:
     types: [closed]
     branches:
-      - master
+      - main
+  push:
+    branches:
+      - main
+    paths:
+      - code
+      - docs
+      - .github
 
 jobs:
   create_release:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write  # REQUIRED for signing
     steps:
+      # 0. 安全加固
+      - name: Harden Runner
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+
+      # 1. 检出代码
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整的 git 历史
 
+      # 2. 获取PR信息
       - name: 获取PR信息
         id: get_pr_info
         uses: actions/github-script@v6
@@ -27,27 +47,57 @@ jobs:
             });
             return pr.data;
 
+      # 3. 安装jq工具
       - name: 安装jq工具
         run: sudo apt-get install -y jq
 
+      # 4. 从package.json获取版本号
       - name: 从package.json获取版本号
         id: get_version
         run: |
           version=$(jq -r '.version' code/package.json)
           echo "version=${version}" >> $GITHUB_OUTPUT
+          echo "tag_name=V${version}" >> $GITHUB_OUTPUT
 
-      - name: 创建发布
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      # 5. 生成证据包
+      - name: 生成证据包
+        if: always()  # Run even if build fails
+        uses: OrygnsCode/ci-evidence-pack@8222d7b3b015ce2f72222215bdf9966773036ab1 # main
         with:
-          tag_name: "V${{ steps.get_version.outputs.version }}"
-          release_name: "V${{ steps.get_version.outputs.version }}"
+          sign: 'true'
+
+      # 6. 创建发布
+      - name: 创建发布
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag_name }}
+          name: Release ${{ steps.get_version.outputs.version }}
           body: |
             **PR信息:**
             - **标题**: ${{ steps.get_pr_info.outputs.result.title }}
             - **描述**: ${{ steps.get_pr_info.outputs.result.body }}
             - **作者**: ${{ steps.get_pr_info.outputs.result.user.login }}
+
+            ---
+
+            ## 📦 证据包说明
+
+            本 Release 包含以下文件：
+
+            - **evidence-bundle.tar.gz**: CI 证据包（包含源代码、Git 元数据、依赖项、SBOM 等）
+            - **evidence-bundle.tar.gz.sig**: 证据包的 Sigstore 签名
+            - **evidence-bundle.tar.gz.crt**: 证据包的签名证书
+
+            证据包用于合规性审计和构建验证，可以使用以下命令验证：
+
+            ```bash
+            ci-evidence-pack verify evidence-bundle.tar.gz
+            ```
           draft: false
           prerelease: false
+          files: |
+            _evidence_dist/*.tar.gz
+            _evidence_dist/*.sig
+            _evidence_dist/*.crt
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}

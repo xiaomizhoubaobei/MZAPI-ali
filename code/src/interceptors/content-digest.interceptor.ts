@@ -14,6 +14,12 @@ export class ContentDigestInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         const response = context.switchToHttp().getResponse();
+
+        // 跳过流式响应或空数据
+        if (data === undefined || data === null) {
+          return data;
+        }
+
         const content = typeof data === 'string' ? data : JSON.stringify(data);
 
         // 生成SHA512摘要
@@ -22,8 +28,10 @@ export class ContentDigestInterceptor implements NestInterceptor {
           .update(content)
           .digest('base64');
 
-        // 设置Content-Digest头部
-        response.setHeader('Content-Digest', `sha-512=${digest}`);
+        // 设置Content-Digest头部（仅在响应未发送时）
+        if (!response.headersSent) {
+          response.setHeader('Content-Digest', `sha-512=${digest}`);
+        }
 
         return data;
       }),

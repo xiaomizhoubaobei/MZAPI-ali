@@ -29,7 +29,7 @@ middleware:
 - code/src/**/*.guard.ts
 
 # 测试相关变更
-tests:
+test:
 - '**/*.test.ts'
 - '**/*.spec.ts'
 - code/src/**/__tests__/**/*

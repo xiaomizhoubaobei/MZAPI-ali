@@ -3,7 +3,22 @@ name: '依赖项审查'
 on:
   # 当有pull_request事件发生时触发
   pull_request:
-    branches: [ "master" ]  # 仅对master分支的PR触发
+    branches:
+      - main
+    paths:
+      - code
+      - docs
+      - .github
+  # 允许手动触发
+  workflow_dispatch:
+  # 当推送到main分支时触发
+  push:
+    branches:
+      - main
+    paths:
+      - code
+      - docs
+      - .github
 
 permissions:
   contents: read  # 读取仓库内容权限
@@ -13,9 +28,41 @@ jobs:
   dependency-review:
     runs-on: ubuntu-latest  # 在最新版Ubuntu上运行
     steps:
+      # 0. 安全加固
+      - name: 加固运行器
+        uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+        with:
+          egress-policy: audit
+
+      # 1. 检出代码库
       - name: '检出代码库'
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整的 git 历史
+
+      # 2. 依赖项审查
       - name: '依赖项审查'
         uses: actions/dependency-review-action@v4
         with:
+          # ========== 基本配置 ==========
+          repo-token: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Token 进行认证
           comment-summary-in-pr: always  # 总是在PR中显示审查摘要
+          fail-on-severity: moderate  # 在中等及以上严重性时失败
+          fail-on-scopes: runtime,development  # 检查运行时和开发依赖
+
+          # ========== 许可证配置 ==========
+          allow-licenses: MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,0BSD,CC0-1.0  # 允许的许可证
+          deny-licenses: GPL-3.0,AGPL-3.0,GPL-2.0,AGPL-2.0  # 禁止的许可证
+
+          # ========== 快照重试配置 ==========
+          retry-on-snapshot-warnings: false  # 在快照警告时重试
+          retry-on-snapshot-warnings-timeout: 0  # 快照重试超时时间（秒）
+
+          # ========== OpenSSF Scorecard 配置 ==========
+          show-openssf-scorecard: true  # 显示 OpenSSF Scorecard 评分摘要
+          warn-on-openssf-scorecard-level: 5  # 低于此分数时发出警告
+
+          # ========== 其他配置 ==========
+          license-check: true  # 启用许可证检查
+          vulnerability-check: true  # 启用漏洞检查
+          warn-only: false  # 不只是警告，失败时会导致工作流失败

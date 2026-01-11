@@ -23,7 +23,7 @@ jobs:
 
       - name: 运行AI推理
         id: inference
-        uses: actions/ai-inference@b8b2afb8390ee6839b494a404766bef6493c7d # v1.2.8
+        uses: actions/ai-inference@v2.0.4
         with:
           prompt: |  # 设置AI提示词
             用一段话总结以下GitHub issue:

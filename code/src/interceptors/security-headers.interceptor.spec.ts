@@ -27,6 +27,7 @@ describe('SecurityHeadersInterceptor', () => {
     const next = TestInterceptorUtils.createMockNext(testData);
 
     await TestInterceptorUtils.executeIntercept(interceptor, context, next, (data) => {
+      expect(setHeaderMock).toHaveBeenCalledTimes(7);
       expect(setHeaderMock).toHaveBeenCalledWith('X-Frame-Options', 'DENY');
       expect(setHeaderMock).toHaveBeenCalledWith(
         'X-Content-Type-Options',
@@ -42,7 +43,7 @@ describe('SecurityHeadersInterceptor', () => {
       );
       expect(setHeaderMock).toHaveBeenCalledWith(
         'Content-Security-Policy',
-        "default-src 'self' *.mizhoubaobei.top; script-src 'self' *.mizhoubaobei.top 'unsafe-inline' 'unsafe-eval'; style-src 'self' *.mizhoubaobei.top 'unsafe-inline'; img-src 'self' *.mizhoubaobei.top data: https:; font-src 'self'*.mizhoubaobei.top data:; connect-src 'self' *.mizhoubaobei.top https:; frame-ancestors 'none';",
+        "default-src 'self' *.mizhoubaobei.top; script-src 'self' *.mizhoubaobei.top 'unsafe-inline' 'unsafe-eval'; style-src 'self' *.mizhoubaobei.top 'unsafe-inline'; img-src 'self' *.mizhoubaobei.top data: https:; font-src 'self' *.mizhoubaobei.top data:; connect-src 'self' *.mizhoubaobei.top https:; frame-ancestors 'none';",
       );
       expect(setHeaderMock).toHaveBeenCalledWith(
         'Permissions-Policy',

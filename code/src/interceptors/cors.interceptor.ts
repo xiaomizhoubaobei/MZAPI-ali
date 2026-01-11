@@ -15,8 +15,8 @@ export class CorsInterceptor implements NestInterceptor {
     // 设置允许所有来源
     response.setHeader('Access-Control-Allow-Origin', '*');
 
-    // 设置允许的方法
-    response.setHeader('Access-Control-Allow-Methods', 'POST');
+    // 设置允许的方法（包括 GET 和 POST）
+    response.setHeader('Access-Control-Allow-Methods', 'GET, POST');
 
     // 设置允许的请求头
     // response.setHeader(
