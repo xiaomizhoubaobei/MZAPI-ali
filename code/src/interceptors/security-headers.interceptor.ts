@@ -26,7 +26,7 @@ export class SecurityHeadersInterceptor implements NestInterceptor {
     // 内容安全策略
     response.setHeader(
         'Content-Security-Policy',
-      "default-src 'self' *.mizhoubaobei.top; script-src 'self' *.mizhoubaobei.top 'unsafe-inline' 'unsafe-eval'; style-src 'self'  *.mizhoubaobei.top 'unsafe-inline'; img-src 'self' *.mizhoubaobei.top data: https:; font-src 'self' *.mizhoubaobei.top data:; connect-src 'self' *.mizhoubaobei.top https:; frame-ancestors 'none';",
+      "default-src 'self' *.mizhoubaobei.top; script-src 'self' *.mizhoubaobei.top 'unsafe-inline' 'unsafe-eval'; style-src 'self' *.mizhoubaobei.top 'unsafe-inline'; img-src 'self' *.mizhoubaobei.top data: https:; font-src 'self' *.mizhoubaobei.top data:; connect-src 'self' *.mizhoubaobei.top https:; frame-ancestors 'none';",
     );
 
     // 权限策略

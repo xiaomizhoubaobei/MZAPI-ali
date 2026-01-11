@@ -7,6 +7,7 @@ name: 标记过期的issue和pull request
 on:
   schedule:
   - cron: '44 0 * * *'  # 每天UTC时间0:44运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   stale:
@@ -16,10 +17,107 @@ jobs:
       pull-requests: write  # 写入PR权限
 
     steps:
-    - uses: actions/stale@v5  # 使用stale动作v5版本
+    - uses: actions/stale@v9  # 使用stale动作v9版本
       with:
         repo-token: ${{ secrets.TOKEN }}  # 使用仓库token进行认证
-        stale-issue-message: '该issue长时间无活动'  # issue过期提醒消息
-        stale-pr-message: '该PR长时间无活动'  # PR过期提醒消息
-        stale-issue-label: 'no-issue-activity'  # 标记过期issue的标签
-        stale-pr-label: 'no-pr-activity'  # 标记过期PR的标签
+
+        # ========== Issue 配置 ==========
+        stale-issue-message: |
+          👋 该issue已经 **60天** 没有任何活动了。
+
+          为了保持仓库的整洁，我们会在 **14天** 后自动关闭此issue。
+
+          如果您认为此issue仍然需要关注，请：
+          - 回复此评论以重置计时器
+          - 提供更多上下文信息
+          - 确认是否仍在等待解决
+
+          感谢您的贡献！🙏
+
+        close-issue-message: |
+          🔒 此issue由于长时间无活动（超过74天）已被自动关闭。
+
+          如果您认为此issue仍然需要解决，请：
+          1. 重新打开此issue
+          2. 提供最新的状态更新或补充信息
+          3. 引用相关团队成员进行审查
+
+        days-before-issue-stale: 60  # issue多久无活动后标记为过期
+        days-before-issue-close: 14  # 标记为过期后多久关闭issue
+
+        stale-issue-label: 'stale'  # 标记过期issue的标签
+        close-issue-label: 'closed-due-to-inactivity'  # 关闭过期issue时添加的标签
+        close-issue-reason: 'not_planned'  # 关闭issue的原因
+
+        # ========== Pull Request 配置 ==========
+        stale-pr-message: |
+          👋 该PR已经 **30天** 没有任何活动了。
+
+          为了保持仓库的整洁，我们会在 **14天** 后自动关闭此PR。
+
+          如果您认为此PR仍然需要关注，请：
+          - 回复此评论以重置计时器
+          - 解决所有CI检查失败
+          - 更新代码以解决审查意见
+          - 请求最新的代码审查
+
+        close-pr-message: |
+          🔒 此PR由于长时间无活动（超过44天）已被自动关闭。
+
+          如果您认为此PR仍然需要合并，请：
+          1. 重新打开此PR
+          2. 更新代码以解决过时的冲突
+          3. 确保所有CI检查通过
+          4. 请求最新的代码审查
+
+        days-before-pr-stale: 30  # PR多久无活动后标记为过期
+        days-before-pr-close: 14  # 标记为过期后多久关闭PR
+
+        stale-pr-label: 'stale'  # 标记过期PR的标签
+        close-pr-label: 'closed-due-to-inactivity'  # 关闭过期PR时添加的标签
+
+        # ========== 排除配置 ==========
+        # 排除带有以下标签的issue和PR，不会对其进行过期处理
+        exempt-issue-labels: 'pinned,security,bug,enhancement,documentation'
+        exempt-pr-labels: 'work-in-progress,wip,draft,security,bug,enhancement'
+
+        # 排除以下里程碑的issue和PR
+        exempt-milestones: 'v1.0.0,stable'
+
+        # 排除草稿PR
+        exempt-draft-pr: 'true'
+
+        # 排除所有有指派人的issue/PR
+        exempt-all-assignees: 'false'
+
+        # ========== 标签管理 ==========
+        # 当issue/PR恢复活跃时添加的标签
+        labels-to-add-when-unstale: 'needs-attention'
+
+        # 当issue/PR标记为过期时移除的标签
+        labels-to-remove-when-stale: 'help wanted,good first issue'
+
+        # 当issue/PR恢复活跃时移除的标签
+        labels-to-remove-when-unstale: 'stale'
+
+        # ========== 其他配置 ==========
+        # 每次运行最多处理多少个过期issue/PR
+        operations-per-run: 30
+
+        # 是否在issue/PR被更新或评论时移除过期标签
+        remove-stale-when-updated: 'true'
+
+        # 是否在issue/PR被关闭时删除分支
+        delete-branch: 'false'
+
+        # 是否启用统计信息
+        enable-statistics: 'true'
+
+        # 是否按升序处理（从最旧的开始）
+        ascending: 'false'
+
+        # 是否忽略更新（任何更新都会重置过期时间）
+        ignore-updates: 'false'
+
+        # 是否只处理有指派人的issue/PR
+        include-only-assigned: 'false'

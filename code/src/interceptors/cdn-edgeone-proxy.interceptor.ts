@@ -15,7 +15,16 @@ export class CdnEdgeoneProxyInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         const response = context.switchToHttp().getResponse();
-        response.setHeader('Service', SERVICE_HEADER);
+
+        // 跳过流式响应
+        if (data === undefined && response.headersSent) {
+          return data;
+        }
+
+        // 设置Service头部（仅在响应未发送时）
+        if (!response.headersSent) {
+          response.setHeader('Service', SERVICE_HEADER);
+        }
         return data;
       }),
     );

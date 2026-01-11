@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { AliyunModule } from './aliyun';
+import { AppController } from './app.controller';
 import {
   CdnEdgeoneProxyInterceptor,
   CorsInterceptor,
@@ -16,6 +17,7 @@ import {
 
 @Module({
   imports: [AliyunModule],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

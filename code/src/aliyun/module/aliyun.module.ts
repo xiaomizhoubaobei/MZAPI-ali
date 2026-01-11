@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ImageModerationController } from '../controller';
-import { ImageModerationService } from '../service';
+import { ImageModerationController, TextGenerationController } from '../controller';
+import { ImageModerationService, TextGenerationService } from '../service';
 
 @Module({
-  controllers: [ImageModerationController],
-  providers: [ImageModerationService],
+  controllers: [ImageModerationController, TextGenerationController],
+  providers: [ImageModerationService, TextGenerationService],
 })
 export class AliyunModule {}

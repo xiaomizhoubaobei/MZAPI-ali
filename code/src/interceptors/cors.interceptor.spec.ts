@@ -1,6 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import {
+  ExecutionContext,
+  CallHandler,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
+import { Observable, of } from 'rxjs';
 import { CorsInterceptor } from './cors.interceptor';
-import { TestInterceptorUtils } from './test-utils';
 
 describe('CorsInterceptor', () => {
   let interceptor: CorsInterceptor;
@@ -17,71 +23,115 @@ describe('CorsInterceptor', () => {
     expect(interceptor).toBeDefined();
   });
 
-  it('should set CORS headers for regular requests', async () => {
-    const setHeaderMock = jest.fn();
-    const responseMock = {
-      setHeader: setHeaderMock,
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-    };
-    const requestMock = { method: 'POST' };
-    const context = TestInterceptorUtils.createMockContext(requestMock, responseMock);
-    const testData = { key: 'value' };
-    const next = TestInterceptorUtils.createMockNext(testData);
+  describe('intercept', () => {
+    let mockContext: ExecutionContext;
+    let mockCallHandler: CallHandler;
+    let mockResponse: any;
+    let mockRequest: any;
 
-    await TestInterceptorUtils.executeIntercept(interceptor, context, next, (data) => {
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Allow-Methods', 'POST');
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Max-Age', '3600');
-      expect(data).toEqual(testData);
+    beforeEach(() => {
+      mockResponse = {
+        setHeader: jest.fn(),
+        status: jest.fn().mockReturnThis(),
+        send: jest.fn(),
+      };
+
+      mockRequest = {
+        method: 'GET',
+        path: '/test',
+      };
+
+      mockContext = {
+        switchToHttp: jest.fn().mockReturnValue({
+          getResponse: () => mockResponse,
+          getRequest: () => mockRequest,
+        }),
+      } as any;
+
+      mockCallHandler = {
+        handle: jest.fn().mockReturnValue(of({ data: 'test' })),
+      };
     });
-  });
 
-  it('should handle OPTIONS preflight request', async () => {
-    const setHeaderMock = jest.fn();
-    const statusMock = jest.fn().mockReturnThis();
-    const sendMock = jest.fn();
-    const responseMock = {
-      setHeader: setHeaderMock,
-      status: statusMock,
-      send: sendMock,
-    };
-    const requestMock = { method: 'OPTIONS' };
-    const context = TestInterceptorUtils.createMockContext(requestMock, responseMock);
-    const next = TestInterceptorUtils.createMockNext({ data: 'test' });
-
-    await TestInterceptorUtils.executeIntercept(interceptor, context, next, (data) => {
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Allow-Methods', 'POST');
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Max-Age', '3600');
-      expect(statusMock).toHaveBeenCalledWith(204);
-      expect(sendMock).toHaveBeenCalled();
+    it('should set CORS headers correctly', (done) => {
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: () => {
+          expect(mockResponse.setHeader).toHaveBeenCalledWith(
+            'Access-Control-Allow-Origin',
+            '*',
+          );
+          expect(mockResponse.setHeader).toHaveBeenCalledWith(
+            'Access-Control-Allow-Methods',
+            'GET, POST',
+          );
+          expect(mockResponse.setHeader).toHaveBeenCalledWith(
+            'Access-Control-Max-Age',
+            '3600',
+          );
+          done();
+        },
+      });
     });
-  });
 
-  it('should pass through data unchanged for POST requests', async () => {
-    const responseMock = {
-      setHeader: jest.fn(),
-    };
-    const requestMock = { method: 'POST' };
-    const context = TestInterceptorUtils.createMockContext(requestMock, responseMock);
-    const testData = { message: 'success' };
-    const next = TestInterceptorUtils.createMockNext(testData);
+    it('should handle OPTIONS preflight request', (done) => {
+      mockRequest.method = 'OPTIONS';
 
-    await TestInterceptorUtils.executeIntercept(interceptor, context, next, (data) => {
-      expect(data).toEqual(testData);
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        complete: () => {
+          expect(mockResponse.status).toHaveBeenCalledWith(204);
+          expect(mockResponse.send).toHaveBeenCalled();
+          expect(mockCallHandler.handle).not.toHaveBeenCalled();
+          done();
+        },
+      });
     });
-  });
 
-  it('should set Access-Control-Allow-Origin to * for any request', async () => {
-    const setHeaderMock = jest.fn();
-    const responseMock = { setHeader: setHeaderMock };
-    const requestMock = { method: 'POST' };
-    const context = TestInterceptorUtils.createMockContext(requestMock, responseMock);
-    const next = TestInterceptorUtils.createMockNext({});
+    it('should handle GET request', (done) => {
+      mockRequest.method = 'GET';
 
-    await TestInterceptorUtils.executeIntercept(interceptor, context, next, () => {
-      expect(setHeaderMock).toHaveBeenCalledWith('Access-Control-Allow-Origin', '*');
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: (data) => {
+          expect(data).toEqual({ data: 'test' });
+          expect(mockCallHandler.handle).toHaveBeenCalled();
+          done();
+        },
+      });
+    });
+
+    it('should handle POST request', (done) => {
+      mockRequest.method = 'POST';
+
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: (data) => {
+          expect(data).toEqual({ data: 'test' });
+          expect(mockCallHandler.handle).toHaveBeenCalled();
+          done();
+        },
+      });
+    });
+
+    it('should handle PUT request', (done) => {
+      mockRequest.method = 'PUT';
+
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: (data) => {
+          expect(data).toEqual({ data: 'test' });
+          expect(mockCallHandler.handle).toHaveBeenCalled();
+          done();
+        },
+      });
+    });
+
+    it('should handle DELETE request', (done) => {
+      mockRequest.method = 'DELETE';
+
+      interceptor.intercept(mockContext, mockCallHandler).subscribe({
+        next: (data) => {
+          expect(data).toEqual({ data: 'test' });
+          expect(mockCallHandler.handle).toHaveBeenCalled();
+          done();
+        },
+      });
     });
   });
 });
