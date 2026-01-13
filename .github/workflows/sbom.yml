@@ -4,15 +4,15 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
-      - "code/yarn.lock"
+      - "src/**"
+      - "package.json"
+      - "yarn.lock"
   pull_request:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
-      - "code/yarn.lock"
+      - "src/**"
+      - "package.json"
+      - "yarn.lock"
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
@@ -44,7 +44,7 @@ jobs:
         format: spdx-json
         output-file: sbom.spdx.json
         # 指定扫描目录
-        path: code
+        path: .
 
     - name: 安装 Sigstore
       uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0

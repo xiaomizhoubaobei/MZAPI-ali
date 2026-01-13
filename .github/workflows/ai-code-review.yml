@@ -4,8 +4,8 @@ on:
   pull_request:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
+      - "src/**"
+      - "package.json"
   workflow_dispatch:
 
 permissions:
