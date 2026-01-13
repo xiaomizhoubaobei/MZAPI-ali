@@ -12,13 +12,13 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
+      - "src/**"
+      - "package.json"
   pull_request:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
+      - "src/**"
+      - "package.json"
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:
@@ -49,7 +49,7 @@ jobs:
       id: njsscan
       uses: ajinabraham/njsscan-action@7237412fdd36af517e2745077cedbf9d6900d711
       with:
-        args: 'code --sarif --output results.sarif || true'
+        args: '. --sarif --output results.sarif || true'
 
     - name: 上传 njsscan 报告
       uses: github/codeql-action/upload-sarif@5d4e8d1aca955e8d8589aabd499c5cae939e33c7 # v4.31.9

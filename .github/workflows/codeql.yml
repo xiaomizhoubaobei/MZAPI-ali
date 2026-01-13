@@ -4,13 +4,13 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
+      - "src/**"
+      - "package.json"
   pull_request:
     branches: [ "main" ]
     paths:
-      - "code/**"
-      - "code/package.json"
+      - "src/**"
+      - "package.json"
   schedule:
     - cron: '0 0 * * 0'
   workflow_dispatch:

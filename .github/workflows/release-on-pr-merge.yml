@@ -9,7 +9,7 @@ on:
     branches:
       - main
     paths:
-      - code
+      - src
       - docs
       - .github
 
@@ -55,7 +55,7 @@ jobs:
       - name: 从package.json获取版本号
         id: get_version
         run: |
-          version=$(jq -r '.version' code/package.json)
+          version=$(jq -r '.version' package.json)
           echo "version=${version}" >> $GITHUB_OUTPUT
           echo "tag_name=V${version}" >> $GITHUB_OUTPUT
 

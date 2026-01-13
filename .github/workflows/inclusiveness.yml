@@ -8,13 +8,13 @@ on:
   push:
     branches: [main]
     paths:
-      - "code/**"
+      - "src/**"
       - "docs/**"
       - ".github/**"
   pull_request:
     branches: [main]
     paths:
-      - "code/**"
+      - "src/**"
       - "docs/**"
       - ".github/**"
   workflow_dispatch:
