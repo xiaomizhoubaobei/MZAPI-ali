@@ -16,4 +16,4 @@ jobs:
     steps:
     - uses: actions/labeler@v4  # 使用labeler动作v4版本
       with:
-        repo-token: "${{ secrets.TOKEN }}"  # 使用仓库token进行认证
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"  # 使用仓库token进行认证
