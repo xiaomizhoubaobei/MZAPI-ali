@@ -100,4 +100,4 @@ jobs:
             _evidence_dist/*.sig
             _evidence_dist/*.crt
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
