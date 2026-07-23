@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [22.x, 24.x]
+        node-version: [22.x, 23.x, 24.x]
 
     env:
       # Node 20 is deprecated on GitHub Actions runners; keep newer LTS lines.
