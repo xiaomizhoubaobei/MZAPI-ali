@@ -6,6 +6,9 @@
 name: 自动标签
 on: [pull_request_target]  # 监听PR目标事件
 
+permissions:
+  contents: read
+
 jobs:
   label:
     runs-on: ubuntu-latest  # 在最新版Ubuntu上运行
@@ -14,6 +17,11 @@ jobs:
       pull-requests: write  # 写入PR权限
 
     steps:
-    - uses: actions/labeler@v4  # 使用labeler动作v4版本
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/labeler@ac9175f8a1f3625fd0d4fb234536d26811351594 # v4.3.0
       with:
         repo-token: "${{ secrets.GITHUB_TOKEN }}"  # 使用仓库token进行认证

@@ -36,13 +36,13 @@ jobs:
 
       # 1. 检出代码库
       - name: '检出代码库'
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0  # 获取完整的 git 历史
 
       # 2. 依赖项审查
       - name: '依赖项审查'
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           # ========== 基本配置 ==========
           repo-token: ${{ secrets.GITHUB_TOKEN }}  # 使用 GitHub Token 进行认证
