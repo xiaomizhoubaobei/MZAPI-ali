@@ -47,7 +47,7 @@ jobs:
 
       # 2. 设置 Node.js 环境
       - name: 设置 Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
@@ -114,7 +114,7 @@ jobs:
 
       # 2. 设置 Node.js 环境
       - name: 设置 Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '23.x'
           cache: 'yarn'
