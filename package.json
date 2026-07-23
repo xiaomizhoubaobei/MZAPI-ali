@@ -69,12 +69,15 @@
     "testEnvironment": "node",
     "reporters": [
       "default",
-      ["jest-junit", {
-        "outputDirectory": "../test-results",
-        "outputName": "junit.xml",
-        "classNameTemplate": "{filepath}",
-        "titleTemplate": "{title}"
-      }]
+      [
+        "jest-junit",
+        {
+          "outputDirectory": "../test-results",
+          "outputName": "junit.xml",
+          "classNameTemplate": "{filepath}",
+          "titleTemplate": "{title}"
+        }
+      ]
     ]
   },
   "jest-junit": {
