@@ -9,6 +9,9 @@ on:
   - cron: '44 0 * * *'  # 每天UTC时间0:44运行
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: read
+
 jobs:
   stale:
     runs-on: ubuntu-latest  # 在最新版Ubuntu上运行
@@ -17,7 +20,12 @@ jobs:
       pull-requests: write  # 写入PR权限
 
     steps:
-    - uses: actions/stale@v9  # 使用stale动作v9版本
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+      with:
+        egress-policy: audit
+
+    - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}  # 使用GitHub自动提供的内置token进行认证
 

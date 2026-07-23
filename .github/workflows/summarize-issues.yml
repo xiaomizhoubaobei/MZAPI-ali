@@ -4,6 +4,9 @@ on:
   issues:
     types: [opened]  # 监听新issue打开事件
 
+permissions:
+  contents: read
+
 jobs:
   summary:
     runs-on: ubuntu-latest  # 在最新版Ubuntu上运行
@@ -24,7 +27,7 @@ jobs:
 
       - name: 运行AI推理
         id: inference
-        uses: actions/ai-inference@v2.0.4
+        uses: actions/ai-inference@334892bb203895caaed82ec52d23c1ed9385151e # v2.0.4
         with:
           prompt: |  # 设置AI提示词
             用一段话总结以下GitHub issue:
