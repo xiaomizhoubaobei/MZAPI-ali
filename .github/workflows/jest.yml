@@ -87,7 +87,7 @@ jobs:
 
       # 8. 上传覆盖率报告为构件
       - name: 上传覆盖率报告为构件
-        uses: actions/upload-artifact@v4.6.1
+        uses: actions/upload-artifact@v7.0.1
         if: matrix.node-version == '23.x'
         with:
           name: coverage-report
@@ -139,7 +139,7 @@ jobs:
 
       # 6. 上传 E2E 测试报告
       - name: 上传 E2E 测试报告
-        uses: actions/upload-artifact@v4.6.1
+        uses: actions/upload-artifact@v7.0.1
         if: always()
         with:
           name: e2e-test-report
