@@ -821,10 +821,10 @@
     webpack "5.106.2"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^10.0.0":
-  version "10.4.20"
-  resolved "https://repo.huaweicloud.com/repository/npm/@nestjs/common/-/common-10.4.20.tgz"
-  integrity sha512-hxJxZF7jcKGuUzM9EYbuES80Z/36piJbiqmPy86mk8qOn5gglFebBTvcx7PWVbRNSb4gngASYnefBj/Y2HAzpQ==
+"@nestjs/common@^10.4.22":
+  version "10.4.22"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.4.22.tgz#002fb71550ed9fd3a42da70e3fe72f7b666aa7a2"
+  integrity sha512-fxJ4v85nDHaqT1PmfNCQ37b/jcv2OojtXTaK1P2uAXhzLf9qq6WNUOFvxBrV4fhQek1EQoT1o9oj5xAZmv3NRw==
   dependencies:
     uid "2.0.2"
     file-type "20.4.1"
