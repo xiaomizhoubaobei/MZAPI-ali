@@ -65,7 +65,16 @@ jobs:
       - name: 运行测试覆盖率
         run: yarn test:cov -- --passWithNoTests
 
-      # 6. 上传覆盖率报告
+      # 6. 上传测试结果到 Codecov Test Analytics
+      - name: 上传测试结果到 Codecov Test Analytics
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report-type: test_results
+          files: ./test-results/junit.xml
+
+      # 7. 上传覆盖率报告
       - name: 上传覆盖率报告
         uses: codecov/codecov-action@v4
         env:
@@ -76,7 +85,7 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: false
 
-      # 7. 上传覆盖率报告为构件
+      # 8. 上传覆盖率报告为构件
       - name: 上传覆盖率报告为构件
         uses: actions/upload-artifact@v4.6.1
         if: matrix.node-version == '23.x'
@@ -119,7 +128,16 @@ jobs:
       - name: 运行 E2E 测试
         run: yarn test:e2e -- --passWithNoTests
 
-      # 5. 上传 E2E 测试报告
+      # 5. 上传 E2E 测试结果到 Codecov Test Analytics
+      - name: 上传 E2E 测试结果到 Codecov Test Analytics
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report-type: test_results
+          files: ./test-results/junit-e2e.xml
+
+      # 6. 上传 E2E 测试报告
       - name: 上传 E2E 测试报告
         uses: actions/upload-artifact@v4.6.1
         if: always()
