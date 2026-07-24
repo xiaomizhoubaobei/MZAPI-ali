@@ -43,11 +43,11 @@ jobs:
 
       # 1. 检出代码
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # 2. 设置 Node.js 环境
       - name: 设置 Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
@@ -68,7 +68,7 @@ jobs:
       # 6. 上传测试结果到 Codecov Test Analytics
       - name: 上传测试结果到 Codecov Test Analytics
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           report-type: test_results
@@ -76,7 +76,7 @@ jobs:
 
       # 7. 上传覆盖率报告
       - name: 上传覆盖率报告
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
@@ -87,7 +87,7 @@ jobs:
 
       # 8. 上传覆盖率报告为构件
       - name: 上传覆盖率报告为构件
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: matrix.node-version == '23.x'
         with:
           name: coverage-report
@@ -110,11 +110,11 @@ jobs:
 
       # 1. 检出代码
       - name: 检出代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # 2. 设置 Node.js 环境
       - name: 设置 Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '23.x'
           cache: 'yarn'
@@ -131,7 +131,7 @@ jobs:
       # 5. 上传 E2E 测试结果到 Codecov Test Analytics
       - name: 上传 E2E 测试结果到 Codecov Test Analytics
         if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+        uses: codecov/test-results-action@0fa95f0e1eeaafde2c782583b36b28ad0d8c77d3 # v1.2.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           report-type: test_results
@@ -139,7 +139,7 @@ jobs:
 
       # 6. 上传 E2E 测试报告
       - name: 上传 E2E 测试报告
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: e2e-test-report
